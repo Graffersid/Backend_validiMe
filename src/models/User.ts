@@ -76,6 +76,25 @@ const UserSchema: Schema = new Schema(
         followers: {
             type: String
         }
+        /*
+        following: [
+            {
+                user:{ 
+                    type: Schema.ObjectId, 
+                    ref: 'User' 
+                },
+            }
+    
+        ],
+        followers: [
+            {
+                user:{ 
+                    type: Schema.ObjectId, 
+                    ref: 'User' 
+                },
+            }
+        ],
+        */
     },
     {
         timestamps: true

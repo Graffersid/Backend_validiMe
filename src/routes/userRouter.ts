@@ -22,15 +22,16 @@ const imgURL = 'http://192.168.1.79/uploads/'
 
 router.post('/signup',  userController.signupUser);
 router.post('/login', userController.loginUser);
-router.post('/updateProfile', userController.updateProfile);
+router.put('/updateProfile', userController.updateProfile);
+router.put('/updatePassword', userController.updateUserPassword)
 
 
 router.post('/uploadProfilePicture', upload.single('image'),  async (req: Request, res: Response, next: NextFunction) => {
-    if (req.body._id == undefined || req.body._id == null || req.body._id == "") {
-		res.status(400).json({success: false, error_msg: "_id cannot be blank" });
+    if (req.body.userId == undefined || req.body.userId == null || req.body.userId == "") {
+		res.status(422).json({success: false, error_msg: "userId cannot be blank" });
 		return;
 	}
-    let userDetails = await userModel.findOne({"_id": req.body._id});
+    let userDetails = await userModel.findOne({"_id": req.body.userId});
     if(userDetails){
         if(req.file) {
             const images = req.file;
