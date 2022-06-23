@@ -100,12 +100,23 @@ router.post('/api/v1/login', passport.authenticate('local'), function(req, res, 
 */
 
 export default function isAuthenticated(req: any, res: any, done: any) {
-    console.log('Auth :', req.user)
-    if(req.user){
-        return done()
+    console.log('header :', req.headers.token);
+
+    console.log('Auth :', req.session)
+    if (req.headers.token) {
+        return res.status(400).json({success: true, message: 'you are authenticated'})
+        return true
+    } else {
+        return res.status(400).json({success: false, message: 'you are not authenticated'})
+        return false  
     }
-    return res.status(400).json({status: false, message: 'you are not authenticated'})
-    return false
+
+    // if(req.session){
+    //     return res.status(400).json({status: false, message: 'you are authenticated'})
+    //     return true
+    // }
+    // return res.status(400).json({status: false, message: 'you are not authenticated'})
+    // return false
 }
 
 const startServer = () => {}

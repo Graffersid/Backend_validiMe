@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import mongoose from "mongoose";
 import userSchema from "../models/User";
+var md5 = require('md5');
 
 const signupUser = async (req: Request, res: Response, next: NextFunction) =>{
     const {fullName, email, contactNumber, password, confirmPassword} = req.body
@@ -25,6 +26,13 @@ const signupUser = async (req: Request, res: Response, next: NextFunction) =>{
 		res.status(422).json({success: false, message: "confirmPassword cannot be blank" });
 		return;
 	}
+    let existingContactNumber = await userSchema.findOne({"contactNumber": contactNumber});
+    if(existingContactNumber) {
+        return res.status(400).json({
+            success: false,
+            message: "mobile number already exists"
+        });
+    }
 
     let existingUser = await userSchema.findOne({"email": email});
     //let existingUser = await userSchema.findOne({ $and: [ {"email": email}, {"contactNumber": contactNumber} ] });
@@ -69,6 +77,8 @@ const signupUser = async (req: Request, res: Response, next: NextFunction) =>{
                 message: "Passwords do not match!"
             });
         }
+        let salt = md5(password)
+        console.log('salt :', salt)
         const user = new userSchema({
             fullName,email,contactNumber, password, 
         });
@@ -87,7 +97,7 @@ const signupUser = async (req: Request, res: Response, next: NextFunction) =>{
             //data: user
         })
         ).catch(error => res
-        .status(500).json({error}))
+        .status(400).json({error}))
     }
 };
 
@@ -152,7 +162,7 @@ const  updateProfile = async (req: Request, res: Response, next: NextFunction) =
         else {
             return res.status(404).json({success: false, message: 'Not found'});
         }
-    }).catch(error => res.status(500).json({error}));
+    }).catch(error => res.status(400).json({error}));
 };
 
 /* update Password */
@@ -166,7 +176,10 @@ const updateUserPassword = async (req: Request, res: Response, next: NextFunctio
 		res.status(422).json({success: false, message: "oldPassword cannot be blank" });
 		return;
 	}
+
     let post: any = await userSchema.findOne({_id: userId});
+
+    
     let  userPassword = post.password
     console.log('userPassword :', userPassword)
     if(userPassword != oldPassword) {
@@ -187,17 +200,14 @@ const updateUserPassword = async (req: Request, res: Response, next: NextFunctio
                     success: true,
                     message: 'password update successfully',
                    // data: user
-                })).catch(error => res.status(500).json({error}))
+                })).catch(error => res.status(400).json({error}))
             }
             else {
                 return res.status(404).json({success: false, message: 'Not found'});
             }
-        }).catch(error => res.status(500).json({error}));
+        }).catch(error => res.status(400).json({error}));
     }
 };
-
-
-
 
 
 
