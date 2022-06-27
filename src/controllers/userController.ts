@@ -1,86 +1,54 @@
 import { NextFunction, Request, Response } from "express";
 import mongoose from "mongoose";
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const dotenv = require('dotenv');
+
 import userSchema from "../models/User";
-var md5 = require('md5');
 
 const signupUser = async (req: Request, res: Response, next: NextFunction) =>{
     const {fullName, email, contactNumber, password, confirmPassword} = req.body
 
-    if (fullName == undefined || fullName == null || fullName == "") {
-		res.status(422).json({success: false, message: "fullName cannot be blank" });
-		return;
-	}
-    if (email == undefined || email == null || email == "") {
-		res.status(422).json({success: false, message: "email cannot be blank" });
-		return;
-	}
-    if (contactNumber == undefined || contactNumber == null || contactNumber == "") {
-		res.status(422).json({success: false, message: "contactNumber cannot be blank" });
-		return;
-	}
-    if (password == undefined || password == null || password == "") {
-		res.status(422).json({success: false, message: "password cannot be blank" });
-		return;
-	}
-    if (confirmPassword == undefined || confirmPassword == null || confirmPassword == "") {
-		res.status(422).json({success: false, message: "confirmPassword cannot be blank" });
-		return;
-	}
-    let existingContactNumber = await userSchema.findOne({"contactNumber": contactNumber});
-    if(existingContactNumber) {
-        return res.status(400).json({
+    if(!fullName ||  !email || !contactNumber|| !password || !confirmPassword || fullName == "" || email == "" || contactNumber == "" || password == "" || confirmPassword == ""){
+        return res.status(422).json({
             success: false,
-            message: "mobile number already exists"
+            message: "Please add all fields"
         });
     }
 
+    let existingContactNumber = await userSchema.findOne({"contactNumber": contactNumber});
+    if(existingContactNumber) {
+        return res.status(400).json({success: false, message: "mobile number already exists"});
+    }
+
     let existingUser = await userSchema.findOne({"email": email});
-    //let existingUser = await userSchema.findOne({ $and: [ {"email": email}, {"contactNumber": contactNumber} ] });
     if(existingUser) {
-        return res.status(400).json({
-            success: false,
-            message: "user already exists"
-        });
+        return res.status(400).json({success: false, message: "user already exists"});
     }
     else {
         if(contactNumber.length != 10) {
-            return res.status(400).json({
-                status: false,
-                message: 'contact number must be 10 digits.'
-            });
+            return res.status(400).json({status: false, message: 'contact number must be 10 digits.'});
         }
         if (email) {
             var validRegex = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
             var results = validRegex.test(email)
             if (results == false) {
-                return res.status(400).json({
-                    success: false,
-                    message: "you have entered an invalid email address!"
-                });
+                return res.status(400).json({success: false, message: "you have entered an invalid email address!"});
             }
         }
-        if(password.length < 6) {
-            return res.status(400).json({
-                success: false,
-                message: "password should be 6 to 13 character long"
-            }); 
+        if(password.length < 6 || password.length > 13) {
+            return res.status(400).json({success: false, message: "password should be 6 to 13 character long"}); 
         }
-        if(password.length > 13) { 
-            return res.status(400).json({
-                success: false,
-                message: "password should be 6 to 13 character long"
-            });
-        }
+        
         if (password != confirmPassword) {
-            return res.status(400).json({
-                success: false,
-                message: "Passwords do not match!"
-            });
+            return res.status(400).json({success: false, message: "Password do not match!" });
         }
-        let salt = md5(password)
-        console.log('salt :', salt)
+
+        const salt = await bcrypt.genSalt(10)
+        const hashedPassword = await bcrypt.hash(password, salt)
+
         const user = new userSchema({
-            fullName,email,contactNumber, password, 
+            fullName, email, contactNumber, password: hashedPassword, 
         });
         return user
         .save()
@@ -92,7 +60,8 @@ const signupUser = async (req: Request, res: Response, next: NextFunction) =>{
                 userId: user._id,
                 email: user.email,
                 fullName: user.fullName,
-                contactNumber: user.contactNumber
+                contactNumber: user.contactNumber,
+                token: generateToken(user._id)
             }
             //data: user
         })
@@ -104,41 +73,44 @@ const signupUser = async (req: Request, res: Response, next: NextFunction) =>{
 
 const loginUser = async (req: Request, res: Response, next: NextFunction) =>{
     const {email, password} = req.body
-    if (email == undefined || email == null || email == "") {
-		res.status(422).json({success: false, message: "email cannot be blank" });
-		return;
-	}
-    if (password == undefined || password == null || password == "") {
-		res.status(422).json({success: false, message: "password cannot be blank" });
-		return;
-	}
-    await userSchema.findOne({email: email}).then(user =>{
-        if (!user) {
-			return res.status(400).json({
-                success: false,
-                message: "email is not registered"
-            });
-		}
-        if (password == user.password) {
-            return res.status(200).json({
-				success: true,
-				message: "Login Successfully",
-				//data: user 
-				data: {
-					//_id: user._id,
-                    userId: user._id,
-                    email: user.email,
-					fullName: user.fullName,
-					contactNumber: user.contactNumber
-				}
-			});
+    if(!email || !password || email == "" || password == ""){
+        return res.status(422).json({success: false, message: "Please add all fields"});
+    }
+    const user =  await userSchema.findOne({email})
+    if (user && (await bcrypt.compare(password, user.password))) {4
+        
+        let payload = {
+            "userId": user._id,
+            "email": user.email
         }
-        else {
-            return res.status(400).json({
-                success: false,
-                message: "Password not match"
-            });
-        }
+        const token = jwt.sign({payload}, '9e703762cd254ed1420ad1be4884fd4d', {
+            expiresIn: '30d'
+        })
+
+        let updateToken =  await userSchema.updateOne({_id: user._id}, { $set : {authToken: token}});
+
+        return res.status(200).json({success: true,
+            message: "Login Successfully", 
+            data: {
+                userId: user._id,
+                email: user.email,
+                fullName: user.fullName,
+                contactNumber: user.contactNumber,
+                authToken: token
+                //authToken: generateToken(user._id)
+            }
+        });
+    }
+    else {
+        return res.status(400).json({success: false, message: "Invalid credentials"});
+    }
+}
+
+// Generate JWT
+const generateToken = (userId: any) => {
+
+    return jwt.sign({userId}, '9e703762cd254ed1420ad1be4884fd4d', {
+        expiresIn: '30d'
     })
 }
 

@@ -75,7 +75,10 @@ const UserSchema: Schema = new Schema(
         },
         followers: {
             type: String
-        }
+        },
+        authToken: {
+            type: String
+        },
         /*
         following: [
             {
