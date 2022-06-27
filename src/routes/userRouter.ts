@@ -3,6 +3,8 @@ import { NextFunction, Request, Response } from "express";
 import multer from "multer";
 import userModel from "../models/User";
 import userController from '../controllers/userController';
+const {protect} = require('../middleware/authMiddleware');
+//import {protect} from '../middleware/authMiddleware';
 
 const router = express.Router();
 
@@ -24,6 +26,7 @@ router.post('/signup',  userController.signupUser);
 router.post('/login', userController.loginUser);
 router.put('/updateProfile', userController.updateProfile);
 router.put('/updatePassword', userController.updateUserPassword)
+router.get('/userList',protect, userController.getUserList);
 
 
 router.post('/uploadProfilePicture', upload.single('image'),  async (req: Request, res: Response, next: NextFunction) => {

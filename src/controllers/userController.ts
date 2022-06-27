@@ -82,7 +82,7 @@ const loginUser = async (req: Request, res: Response, next: NextFunction) =>{
             "userId": user._id,
             "email": user.email
         }
-        const token = jwt.sign({payload}, '9e703762cd254ed1420ad1be4884fd4d', {
+        const token = jwt.sign({id: user._id}, '9e703762cd254ed1420ad1be4884fd4d', {
             expiresIn: '30d'
         })
 
@@ -95,7 +95,7 @@ const loginUser = async (req: Request, res: Response, next: NextFunction) =>{
                 email: user.email,
                 fullName: user.fullName,
                 contactNumber: user.contactNumber,
-                authToken: token
+                token: token
                 //authToken: generateToken(user._id)
             }
         });
@@ -135,6 +135,11 @@ const  updateProfile = async (req: Request, res: Response, next: NextFunction) =
         }
     }).catch(error => res.status(400).json({error}));
 };
+
+const getUserList = async (req: Request, res: Response, next: NextFunction) => {
+    return res.json('User list')
+
+}
 
 /* update Password */
 const updateUserPassword = async (req: Request, res: Response, next: NextFunction) => {
@@ -185,4 +190,4 @@ const updateUserPassword = async (req: Request, res: Response, next: NextFunctio
 
 
 
-export default {signupUser, loginUser, updateProfile, updateUserPassword}
+export default {signupUser, loginUser, updateProfile, getUserList, updateUserPassword}
