@@ -60,8 +60,7 @@ const signupUser = async (req: Request, res: Response, next: NextFunction) =>{
                 userId: user._id,
                 email: user.email,
                 fullName: user.fullName,
-                contactNumber: user.contactNumber,
-                token: generateToken(user._id)
+                contactNumber: user.contactNumber
             }
             //data: user
         })
@@ -77,7 +76,7 @@ const loginUser = async (req: Request, res: Response, next: NextFunction) =>{
         return res.status(422).json({success: false, message: "Please add all fields"});
     }
     const user =  await userSchema.findOne({email})
-    if (user && (await bcrypt.compare(password, user.password))) {4
+    if (user && (await bcrypt.compare(password, user.password))) {
         
         let payload = {
             "userId": user._id,
