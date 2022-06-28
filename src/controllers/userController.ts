@@ -1,10 +1,12 @@
 import { NextFunction, Request, Response } from "express";
+import { Result } from "express-validator";
 import mongoose from "mongoose";
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 
 import userSchema from "../models/User";
+import ideaModel from '../models/Idea';
 
 const signupUser = async (req: Request, res: Response, next: NextFunction) =>{
     const {fullName, email, contactNumber, password, confirmPassword} = req.body
@@ -41,7 +43,7 @@ const signupUser = async (req: Request, res: Response, next: NextFunction) =>{
         }
         
         if (password != confirmPassword) {
-            return res.status(400).json({success: false, message: "Password do not match!" });
+            return res.status(400).json({success: false, message: "password and confirm password do not match!" });
         }
 
         const salt = await bcrypt.genSalt(10)
@@ -107,7 +109,6 @@ const loginUser = async (req: Request, res: Response, next: NextFunction) =>{
 
 // Generate JWT
 const generateToken = (userId: any) => {
-
     return jwt.sign({userId}, '9e703762cd254ed1420ad1be4884fd4d', {
         expiresIn: '30d'
     })
@@ -136,58 +137,147 @@ const  updateProfile = async (req: Request, res: Response, next: NextFunction) =
     }).catch(error => res.status(400).json({error}));
 };
 
+/* user list testing for auth api */
 const getUserList = async (req: Request, res: Response, next: NextFunction) => {
-    return res.json('User list')
-
+    const user =  await userSchema.find()
+    return res.send(user)
 }
 
 /* update Password */
 const updateUserPassword = async (req: Request, res: Response, next: NextFunction) => {
     const {userId, oldPassword, password, confirmPassword} = req.body
+
+    if(!userId || !oldPassword || !password || !confirmPassword || userId == "" || oldPassword == "" || password == "" || confirmPassword == "") {
+        return res.status(422).json({success: false, message: "Please add all fields"});
+    }
+    if (password != confirmPassword) {
+        return res.status(400).json({success: false, message: "password and confirm password do not match!" });
+    }
+    const user =  await userSchema.findOne({_id: userId})
+    if (user && (await bcrypt.compare(oldPassword, user.password))) {
+        const salt = await bcrypt.genSalt(10)
+        const hashedPassword = await bcrypt.hash(password, salt)
+
+        let updatedPassword =  await userSchema.updateOne({_id: user._id}, { $set : {password: hashedPassword}});
+        return res.status(201).json({
+            success: true,
+            message: 'password update successfully',
+        })
+    } else {
+        return res.status(400).json({success: false, message: "Invalid credentials"});
+    }
+};
+
+const forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
+    const {email} = req.body
+    if (email == undefined || email == null || email == "") {
+		res.status(422).json({success: false, message: "email cannot be blank" });
+		return;
+	}
+    return res.status(201).json({
+        success: true,
+        message: "Thank you! An email has been sent to " + email + " email id. Please check your inbox."
+    })
+};
+
+const logout = async (req: Request, res: Response, next: NextFunction) => {
+    const {userId} = req.body
     if (userId == undefined || userId == null || userId == "") {
 		res.status(422).json({success: false, message: "userId cannot be blank" });
 		return;
 	}
-    if (oldPassword == undefined || oldPassword == null || oldPassword == "") {
-		res.status(422).json({success: false, message: "oldPassword cannot be blank" });
-		return;
+    let updatedPassword =  await userSchema.updateOne({_id: userId}, { $set : {authToken: null}});
+    return res.status(201).json({
+        success: true,
+        message: "logout successfully"
+    })
+};
+
+const postIdea = async (req: Request, res: Response, next: NextFunction) => {
+    const {userId, } = req.body
+    if (userId == undefined || userId == null || userId == "") {
+        return res.status(422).json({success: false, message: "userId cannot be blank" });
 	}
-
-    let post: any = await userSchema.findOne({_id: userId});
-
-    
-    let  userPassword = post.password
-    console.log('userPassword :', userPassword)
-    if(userPassword != oldPassword) {
-        return res.status(404).json({success: false, message: 'old password do not match'});
-    }
-    else {
-        if (password != confirmPassword) {
-            return res.status(400).json({
-                success: false,
-                message: "Passwords do not match!"
+    try {
+        const newIdea = new ideaModel(req.body);
+        await newIdea.save().then((response: any) => {
+            return res.status(201).json({
+                status: 201, 
+                message: "idea post successfully" 
             });
-        }
-        return userSchema.findById({_id: userId}).then((user) =>{
-            if(user) {
-                user.set(req.body)
-                return user.save()
-                .then(user =>  res.status(201).json({
-                    success: true,
-                    message: 'password update successfully',
-                   // data: user
-                })).catch(error => res.status(400).json({error}))
-            }
-            else {
-                return res.status(404).json({success: false, message: 'Not found'});
-            }
-        }).catch(error => res.status(400).json({error}));
+        })
+    } catch (e) {
+        console.log('error :', e)
+        return res.status(400).json({
+            status: 400, 
+            message: 'error'
+        });
     }
 };
 
+const updateIdeaStatus = async (req: Request, res: Response, next: NextFunction) => {
+    const {_id, status } = req.body
+    if (_id == undefined || _id == null || _id == "" || status == null || status == "") {
+		return res.status(422).json({success: false, message: "please fill all fields" });
+	}
+    try {
+        const idea =  await ideaModel.findOne({_id: _id})
+        if(!idea) {
+            return res.status(400).json({
+                status: 400, 
+                message: "no idea found"
+            });
+        }
+        else {
+            let updatedStatus =  await ideaModel.updateOne({_id}, { $set : {status: req.body.status}});
+            console.log('updatedStatus', updatedStatus)
+            return res.status(201).json({
+                success: true,
+                message: "status update successfully"
+            })
+        }
+    } catch (error) {
+        return res.status(400).json({
+            status: 400, 
+            message: 'something went wrong'
+        }); 
+    }
+};
+
+const getIdeaByUserId = async (req: Request, res: Response, next: NextFunction) => {
+    const {userId} = req.body
+    if (userId == undefined || userId == null || userId == "") {
+		return res.status(422).json({success: false, message: "userId cannot be blank" });
+	}
+    const idea =  await ideaModel.find({userId})
+    if(idea){
+        return res.status(201).json({
+            success: true,
+            message: "idea list",
+            data: idea
+        })
+    } 
+    else {
+        return res.status(400).json({
+            status: 400, 
+            message: "no idea found"
+        });
+    }
+}
 
 
 
 
-
-export default {signupUser, loginUser, updateProfile, getUserList, updateUserPassword}
+export default {
+    logout,
+    loginUser,
+    signupUser,
+    getUserList,
+    updateProfile,
+    forgotPassword,
+    updateUserPassword,
+    postIdea,
+    getIdeaByUserId,
+    updateIdeaStatus,
+    
+}
