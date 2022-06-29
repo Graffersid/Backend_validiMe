@@ -3,7 +3,7 @@ import mongoose, { Schema, Document, Types, ObjectId } from "mongoose";
 
 export interface IIdea extends Document {
     userId: ObjectId;
-    age: number;
+    ageGroup: string;
     gender: string;
     maritalStatus: string;
     occupption: string;
@@ -23,7 +23,6 @@ export interface IIdea extends Document {
     question_9: Object,
     question_10: Object,
     status: boolean,
-    is_active: boolean,
 }
 
 const IdeaSchema = new Schema<IIdea>(
@@ -33,8 +32,8 @@ const IdeaSchema = new Schema<IIdea>(
             required: true,
             ref: 'User'
         },
-        age: {
-            type: Number,
+        ageGroup: {
+            type: String,
             required: true
         },
         gender: {

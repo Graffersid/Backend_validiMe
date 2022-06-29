@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken')
 const asyncHandler = require('express-async-handler')
 //const userModel = require('../models/User');
 import userModel from "../models/User";
+import { config } from '../config/config';
 
 require("dotenv").config();
 
@@ -13,7 +14,7 @@ const protect = asyncHandler(async (req: Request , res: Response, next: NextFunc
         try {
             // Get Token from Header
             token = req.headers.authorization.split(' ')[1]
-            const decoded = jwt.verify(token, '9e703762cd254ed1420ad1be4884fd4d')
+            const decoded = jwt.verify(token, config.token.JWT_SECRET)
             // Get User from the token
             await userModel.findById({_id: decoded.id}).select('-password')
             next()

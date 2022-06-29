@@ -4,9 +4,12 @@ import mongoose from "mongoose";
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
+import { config } from '../config/config';
 
 import userSchema from "../models/User";
 import ideaModel from '../models/Idea';
+import { any } from "joi";
+import User from "../models/User";
 
 const signupUser = async (req: Request, res: Response, next: NextFunction) =>{
     const {fullName, email, contactNumber, password, confirmPassword} = req.body
@@ -84,8 +87,8 @@ const loginUser = async (req: Request, res: Response, next: NextFunction) =>{
             "userId": user._id,
             "email": user.email
         }
-        const token = jwt.sign({id: user._id}, '9e703762cd254ed1420ad1be4884fd4d', {
-            expiresIn: '30d'
+        const token = await jwt.sign({id: user._id}, config.token.JWT_SECRET, {
+            expiresIn: config.token.JWT_TOKEN_EXPIRED
         })
 
         let updateToken =  await userSchema.updateOne({_id: user._id}, { $set : {authToken: token}});
@@ -210,7 +213,7 @@ const postIdea = async (req: Request, res: Response, next: NextFunction) => {
         console.log('error :', e)
         return res.status(400).json({
             status: 400, 
-            message: 'error'
+            message: 'Some error occurred while post the Idea.'
         });
     }
 };
@@ -264,8 +267,40 @@ const getIdeaByUserId = async (req: Request, res: Response, next: NextFunction) 
         });
     }
 }
+const searchWithTargetAudience = async (req: Request, res: Response, next: NextFunction) => {
+    const {ageGroup, gender, maritalStatus, occupption, country, state, city } = req.body
+    
+    const target = await ideaModel.find({ $or : [
+        {'ageGroup': new RegExp(ageGroup, 'i')},
+        { 'gender': new RegExp(gender, 'i')},
+        { 'maritalStatus': new RegExp(maritalStatus, 'i')},
+        { 'occupption': new RegExp(occupption, 'i')},
+        { 'country': new RegExp(country, 'i')},
+        { 'state': new RegExp(state, 'i')},
+        { 'city': new RegExp(city, 'i')},
+        {status: true}
+    ]}).populate('userId').sort({"createdAt": -1});
 
+    //const targets = await ideaModel.find( { $or: [ { ageGroup: new RegExp(ageGroup, 'i') }, { status: true} ] } ).populate('userId')
 
+    //const targetAudience = await ideaModel.find({ $or : [{'ageGroup': new RegExp(ageGroup, 'i') }, { 'gender': new RegExp(gender, 'i') }, {'maritalStatus': maritalStatus}, {'occupption': occupption},{'country': country},{'state': state},{'city': city} ]}).sort({"createdAt": -1});
+    if(target.length>0){
+        return res.status(201).json({
+            success: true,
+            message: "target audience list",
+            data: target
+        })
+    }
+    else {
+        const target = await ideaModel.find({$and: [{ createdAt: -1 } ,{ status: true }]}).populate('userId');
+        //const target = await ideaModel.find().sort({"createdAt": -1}).populate('userId');
+        return res.status(201).json({
+            success: true,
+            message: "target audience list",
+            data: target
+        })
+    }
+};
 
 
 export default {
@@ -279,5 +314,5 @@ export default {
     postIdea,
     getIdeaByUserId,
     updateIdeaStatus,
-    
+    searchWithTargetAudience,  
 }

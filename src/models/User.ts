@@ -6,7 +6,7 @@ export interface IUser {
     password: string;
     contactNumber: string;
     images: object;
-    age: number;
+    ageGroup: string;
     gender: string;
     country: string;
     state: string;
@@ -46,8 +46,8 @@ const UserSchema: Schema = new Schema(
         images: {
             type:Object
         },
-        age: {
-            type: Number
+        ageGroup: {
+            type: String
         },
         gender: {
             type: String

@@ -25,16 +25,17 @@ const imgURL = 'http://192.168.1.79/uploads/'
 /* user routes */
 router.post('/signup',  userController.signupUser);
 router.post('/login', userController.loginUser);
-router.put('/updateProfile',protect, userController.updateProfile);
-router.post('/forgotPassword',protect, userController.forgotPassword);
-router.put('/updatePassword',protect, userController.updateUserPassword);
-router.get('/userList',protect, userController.getUserList);
+router.put('/updateProfile', userController.updateProfile);
+router.post('/forgotPassword', protect, userController.forgotPassword);
+router.put('/updatePassword', protect, userController.updateUserPassword);
+router.get('/userList', protect, userController.getUserList);
 router.post('/logout', protect, userController.logout);
 
 /* idea routes */
-router.post('/postIdea',protect, userController.postIdea);
-router.post('/updateStatus',protect, userController.updateIdeaStatus);
-router.post('/getIdeaByUser',protect, userController.getIdeaByUserId);
+router.post('/postIdea', protect, userController.postIdea);
+router.post('/updateStatus', protect, userController.updateIdeaStatus);
+router.post('/getIdeaByUser', protect, userController.getIdeaByUserId);
+router.post('/searchTargetAudience', protect, userController.searchWithTargetAudience);
 
 
 router.post('/uploadProfilePicture', upload.single('image'),  async (req: Request, res: Response, next: NextFunction) => {
