@@ -131,7 +131,7 @@ const  updateProfile = async (req: Request, res: Response, next: NextFunction) =
             .then(user =>  res.status(201).json({
                 success: true,
                 message: 'profile update successfully',
-               // data: user
+               data: user
             })).catch(error => res.status(500).json({error}))
         }
         else {
@@ -183,6 +183,31 @@ const forgotPassword = async (req: Request, res: Response, next: NextFunction) =
     })
 };
 
+const removeProfilePicture = async(req: Request, res: Response, next: NextFunction) => {
+    const {userId} = req.body
+    if (userId == undefined || userId == null || userId == "") {
+		res.status(422).json({success: false, message: "userId cannot be blank" });
+		return;
+	}
+    return userSchema.findById({_id: userId}).then((user) =>{
+        if(user) {
+            user.set({images: null})
+            return user.save()
+            .then(user =>  res.status(201).json({
+                success: true,
+                message: 'profile picture remove successfully'
+               //data: user
+            })).catch(error => res.status(500).json({error}))
+        }
+        else {
+            return res.status(404).json({success: false, message: 'Not found'});
+        }
+    }).catch(error => res.status(400).json({error}));
+
+
+
+}
+
 const logout = async (req: Request, res: Response, next: NextFunction) => {
     const {userId} = req.body
     if (userId == undefined || userId == null || userId == "") {
@@ -215,6 +240,23 @@ const postIdea = async (req: Request, res: Response, next: NextFunction) => {
             status: 400, 
             message: 'Some error occurred while post the Idea.'
         });
+    }
+};
+
+
+const getIdeaList = async (req: Request, res: Response, next: NextFunction) => {
+    const idea =  await ideaModel.find({status: true}).sort({"createdAt":-1}).limit(50);
+    if(idea.length>0) {
+        return res.status(201).json({
+            success: true,
+            message: " post idea list",
+            data: idea
+        })
+    } else {
+        return res.status(201).json({
+            success: true,
+            message: "no idea found",
+        }) 
     }
 };
 
@@ -267,6 +309,40 @@ const getIdeaByUserId = async (req: Request, res: Response, next: NextFunction) 
         });
     }
 }
+
+const searchAudience = async (req: Request, res: Response, next: NextFunction) => {
+    console.log(req.params.key);
+    const data = await ideaModel.find( {
+        $and: [
+            {status: true},
+            { $or: [
+                {"ageGroup":{$regex: req.params.key}},
+                {"gender":{$regex: req.params.key}},
+                {"maritalStatus":{$regex: req.params.key}},
+                {"occupption":{$regex: req.params.key}},
+                {"country":{$regex: req.params.key}},
+                {"state":{$regex: req.params.key}},
+                {"city":{$regex: req.params.key}},
+            ]}
+        ]
+    }).populate('userId').sort({"createdAt": -1});
+
+    if(data.length>0){
+        return res.status(201).json({
+            success: true,
+            message: "target audience list",
+            data: data
+        })
+    }
+    else{
+        return res.status(401).json({
+            success: false,
+            message: "no data found"
+        })
+    } 
+}
+
+/*
 const searchWithTargetAudience = async (req: Request, res: Response, next: NextFunction) => {
     const {ageGroup, gender, maritalStatus, occupption, country, state, city } = req.body
     
@@ -301,6 +377,18 @@ const searchWithTargetAudience = async (req: Request, res: Response, next: NextF
         })
     }
 };
+*/
+
+const validateIdea = async (req: Request, res: Response, next: NextFunction) => {
+    
+    
+    return res.status(201).json({
+        success: true,
+        message: "idea validate successfully"
+    })
+};
+
+
 
 
 export default {
@@ -311,8 +399,11 @@ export default {
     updateProfile,
     forgotPassword,
     updateUserPassword,
+    removeProfilePicture,
     postIdea,
+    getIdeaList,
+    searchAudience,
     getIdeaByUserId,
     updateIdeaStatus,
-    searchWithTargetAudience,  
+    validateIdea, 
 }
