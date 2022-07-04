@@ -45,7 +45,6 @@ router.post('/validateIdea', protect, userController.validateIdea);
 
 
 
-
 router.post('/uploadProfilePicture', upload.single('image'), async (req: Request, res: Response, next: NextFunction) => {
     if (req.body.userId == undefined || req.body.userId == null || req.body.userId == "") {
         res.status(422).json({ success: false, error_msg: "userId cannot be blank" });

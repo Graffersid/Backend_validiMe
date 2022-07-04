@@ -8,8 +8,10 @@ import { config } from '../config/config';
 
 import userSchema from "../models/User";
 import ideaModel from '../models/Idea';
+import validateIdeaModel from "../models/validateIdea";
 import { any } from "joi";
 import User from "../models/User";
+
 
 const signupUser = async (req: Request, res: Response, next: NextFunction) =>{
     const {fullName, email, contactNumber, password, confirmPassword} = req.body
@@ -380,6 +382,7 @@ const searchWithTargetAudience = async (req: Request, res: Response, next: NextF
 */
 
 const validateIdea = async (req: Request, res: Response, next: NextFunction) => {
+    //validateIdeaModel
     
     
     return res.status(201).json({
