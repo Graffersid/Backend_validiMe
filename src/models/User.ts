@@ -70,11 +70,14 @@ const UserSchema: Schema = new Schema(
         experties: {
             type: String
         },
+        point: {
+            type: Number
+        },
         following: {
-            type: String
+            type: Number
         },
         followers: {
-            type: String
+            type: Number
         },
         authToken: {
             type: String
