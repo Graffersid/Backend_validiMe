@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+const asyncHandler = require('express-async-handler')
 import { Result } from "express-validator";
 import mongoose from "mongoose";
 const bcrypt = require('bcrypt');
@@ -170,7 +171,7 @@ const updateUserPassword = async (req: Request, res: Response, next: NextFunctio
             message: 'password update successfully',
         })
     } else {
-        return res.status(400).json({success: false, message: "Invalid credentials"});
+        return res.status(404).json({success: false, message: "Invalid credentials"});
     }
 };
 
@@ -205,10 +206,7 @@ const removeProfilePicture = async(req: Request, res: Response, next: NextFuncti
         else {
             return res.status(404).json({success: false, message: 'Not found'});
         }
-    }).catch(error => res.status(400).json({error}));
-
-
-
+    }).catch(error => res.status(403).json({error}));
 }
 
 const logout = async (req: Request, res: Response, next: NextFunction) => {
@@ -239,8 +237,8 @@ const postIdea = async (req: Request, res: Response, next: NextFunction) => {
         })
     } catch (e) {
         console.log('error :', e)
-        return res.status(400).json({
-            status: 400, 
+        return res.status(403).json({
+            status: 403, 
             message: 'Some error occurred while post the Idea.'
         });
     }
@@ -248,18 +246,25 @@ const postIdea = async (req: Request, res: Response, next: NextFunction) => {
 
 
 const getIdeaList = async (req: Request, res: Response, next: NextFunction) => {
-    const idea =  await ideaModel.find({status: true}).sort({"createdAt":-1}).limit(50);
-    if(idea.length>0) {
-        return res.status(201).json({
-            success: true,
-            message: " post idea list",
-            data: idea
-        })
-    } else {
-        return res.status(201).json({
-            success: true,
-            message: "no idea found",
-        }) 
+    try {
+        const idea =  await ideaModel.find({status: true}).sort({"createdAt":-1}).limit(50);
+        if(idea.length>0) {
+            return res.status(201).json({
+                success: true,
+                message: " post idea list",
+                data: idea
+            })
+        } else {
+            return res.status(404).json({
+                success: true,
+                message: "no idea found",
+            }) 
+        }
+    } catch (error) {
+        return res.status(403).json({
+            status: 403, 
+            message: 'something went wrong'
+        });
     }
 };
 
@@ -271,8 +276,8 @@ const updateIdeaStatus = async (req: Request, res: Response, next: NextFunction)
     try {
         const idea =  await ideaModel.findOne({_id: _id})
         if(!idea) {
-            return res.status(400).json({
-                status: 400, 
+            return res.status(404).json({
+                success: false, 
                 message: "no idea found"
             });
         }
@@ -285,8 +290,8 @@ const updateIdeaStatus = async (req: Request, res: Response, next: NextFunction)
             })
         }
     } catch (error) {
-        return res.status(400).json({
-            status: 400, 
+        return res.status(403).json({
+            status: 403, 
             message: 'something went wrong'
         }); 
     }
@@ -297,52 +302,69 @@ const getIdeaByUserId = async (req: Request, res: Response, next: NextFunction) 
     if (userId == undefined || userId == null || userId == "") {
 		return res.status(422).json({success: false, message: "userId cannot be blank" });
 	}
-    const idea =  await ideaModel.find({userId})
-    if(idea){
-        return res.status(201).json({
-            success: true,
-            message: "idea list",
-            data: idea
-        })
-    } 
-    else {
-        return res.status(400).json({
-            status: 400, 
-            message: "no idea found"
+
+    try {
+        const idea =  await ideaModel.find({userId})
+        if(idea){
+            return res.status(201).json({
+                success: true,
+                message: "idea list",
+                data: idea
+            })
+        } 
+        else {
+            return res.status(404).json({
+                status: 404, 
+                message: "no idea found"
+            });
+        }
+        
+    } catch (error) {
+        return res.status(403).json({
+            status: 403, 
+            message: 'Some error occurred.'
         });
     }
 }
 
 const searchAudience = async (req: Request, res: Response, next: NextFunction) => {
-    console.log(req.params.key);
-    const data = await ideaModel.find( {
-        $and: [
-            {status: true},
-            { $or: [
-                {"ageGroup":{$regex: req.params.key}},
-                {"gender":{$regex: req.params.key}},
-                {"maritalStatus":{$regex: req.params.key}},
-                {"occupption":{$regex: req.params.key}},
-                {"country":{$regex: req.params.key}},
-                {"state":{$regex: req.params.key}},
-                {"city":{$regex: req.params.key}},
-            ]}
-        ]
-    }).populate('userId').sort({"createdAt": -1});
-
-    if(data.length>0){
-        return res.status(201).json({
-            success: true,
-            message: "target audience list",
-            data: data
-        })
+    //console.log(req.params.key);
+    try {
+        const data = await ideaModel.find( {
+            $and: [
+                {status: true},
+                { $or: [
+                    {"ageGroup":{$regex: req.params.key}},
+                    {"gender":{$regex: req.params.key}},
+                    {"maritalStatus":{$regex: req.params.key}},
+                    {"occupption":{$regex: req.params.key}},
+                    {"country":{$regex: req.params.key}},
+                    {"state":{$regex: req.params.key}},
+                    {"city":{$regex: req.params.key}},
+                ]}
+            ]
+        }).populate('userId').sort({"createdAt": -1});
+    
+        if(data.length>0){
+            return res.status(201).json({
+                success: true,
+                message: "target audience list",
+                data: data
+            })
+        }
+        else{
+            return res.status(404).json({
+                success: false,
+                message: "no data found"
+            })
+        } 
+        
+    } catch (error) {
+        return res.status(403).json({
+            status: 403, 
+            message: 'Some error occurred.'
+        });
     }
-    else{
-        return res.status(401).json({
-            success: false,
-            message: "no data found"
-        })
-    } 
 }
 
 /*
@@ -382,6 +404,36 @@ const searchWithTargetAudience = async (req: Request, res: Response, next: NextF
 };
 */
 
+
+//const idea =  await ideaModel.findOne({_id: _id});
+
+const ideaDetailByIdeaId = async (req: Request, res: Response, next: NextFunction) => {
+    const {_id } = req.body
+    if (_id == undefined || _id == null || _id == "") {
+		return res.status(422).json({success: false, message: "_id cannot be blank" });
+	}
+
+    try {
+        const idea =  await ideaModel.findOne({_id});
+        if (idea) {
+            return res.status(200).json({
+                success: true,
+                data : idea
+            })   
+        } else {
+            return res.status(404).json({
+                success: false,
+                message: "idea not found"
+            })   
+        }
+    } catch (error) {
+        return res.status(403).json({
+            status: 403, 
+            message: 'Some error occurred.'
+        });
+    }
+};
+
 const validateIdea = async (req: Request, res: Response, next: NextFunction) => {
     const {userId, ideaId } = req.body
     if (userId == undefined || userId == null || userId == "" || ideaId == null || ideaId == "" || ideaId == undefined ) {
@@ -396,34 +448,55 @@ const validateIdea = async (req: Request, res: Response, next: NextFunction) => 
 
             const maxPoint: any = 5;
             const userDetails =  await userSchema.findOne({_id: userId})
-
            let points: any =  userDetails?.point + maxPoint
             let updatePoint =  await userSchema.updateOne({_id: userId}, { $set : {point: points}});
             return res.status(201).json({
                 success: true,
                 message: "idea validate successfully"
             })
-            // .then((response: any) => {
-            //     return res.status(201).json({
-            //         success: true,
-            //         message: "idea validate successfully"
-            //     })
-            // })
         } else {
-            return res.status(201).json({
+            return res.status(404).json({
                 success: false,
                 message: "you have already validated this ideas"
             })
         }
     } catch (e) {
-        return res.status(400).json({
-            status: 400, 
-            message: 'Some error occurred while post the Idea.'
+        return res.status(403).json({
+            status: 403, 
+            message: 'something went wrong'
         });
     }
 };
 
 
+//const countQuestion = async (req: Request, res: Response, next: NextFunction) => {
+const questionCount =  asyncHandler(async (req: Request , res: Response, next: NextFunction) => {  
+    const { ideaId } = req.body
+    if (ideaId == "" || ideaId == null || ideaId == undefined ) {
+        return res.status(422).json({success: false, message: "please fill all mandatory fields" });
+	}
+    try {
+        const idea = await ideaModel.findOne({_id: req.body.ideaId})
+        if (idea) {
+            let question:any = idea?.validateQuestion
+            const count:number = question.length
+            return res.status(201).json({
+                success: true,
+                questions: count
+            })
+        } else {
+            return res.status(404).json({
+                success: false,
+                message: "ideaId not found"
+            })
+        }
+    } catch (error) {
+        return res.status(403).json({
+            status: 403, 
+            message: 'something went wrong'
+        });
+    }
+});
 
 
 export default {
@@ -437,8 +510,10 @@ export default {
     removeProfilePicture,
     postIdea,
     getIdeaList,
+    ideaDetailByIdeaId,
     searchAudience,
     getIdeaByUserId,
     updateIdeaStatus,
-    validateIdea, 
+    validateIdea,
+    questionCount 
 }

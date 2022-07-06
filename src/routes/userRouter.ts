@@ -36,12 +36,16 @@ router.post('/removeProfilePicture', protect,userController.removeProfilePicture
 
 /* idea routes */
 router.post('/postIdea', protect, userController.postIdea);
-router.get('/ideaList', userController.getIdeaList);
+router.get('/ideaList',  userController.getIdeaList);
 router.post('/updateStatus', protect, userController.updateIdeaStatus);
-router.post('/getIdeaByUser', protect, userController.getIdeaByUserId);
+router.post('/getIdeaByUserId', protect, userController.getIdeaByUserId);
+router.post('/ideaDetailById', protect, userController.ideaDetailByIdeaId);
 //router.post('/searchTargetAudience', protect, userController.searchWithTargetAudience);
 router.get('/searchTargetAudience/:key', protect, userController.searchAudience);
 router.post('/validateIdea', protect, userController.validateIdea);
+router.get('/questionCount',protect, userController.questionCount);
+
+
 
 
 
