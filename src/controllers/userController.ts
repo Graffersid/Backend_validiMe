@@ -228,18 +228,20 @@ const postIdea = async (req: Request, res: Response, next: NextFunction) => {
         return res.status(422).json({success: false, message: "userId cannot be blank" });
 	}
     try {
-        const newIdea = new ideaModel(req.body);
+        var points: number = 5;
+        const ideaDetails = { points, ...req.body }
+        const newIdea = new ideaModel(ideaDetails);
         await newIdea.save().then((response: any) => {
             return res.status(201).json({
                 status: 201, 
-                message: "idea post successfully" 
+                message: "idea post successfully"
             });
         })
     } catch (e) {
         console.log('error :', e)
         return res.status(403).json({
             status: 403, 
-            message: 'Some error occurred while post the Idea.'
+            message: 'malformed request'
         });
     }
 };
@@ -263,7 +265,7 @@ const getIdeaList = async (req: Request, res: Response, next: NextFunction) => {
     } catch (error) {
         return res.status(403).json({
             status: 403, 
-            message: 'something went wrong'
+            message: 'malformed request'
         });
     }
 };
@@ -292,7 +294,7 @@ const updateIdeaStatus = async (req: Request, res: Response, next: NextFunction)
     } catch (error) {
         return res.status(403).json({
             status: 403, 
-            message: 'something went wrong'
+            message: 'malformed request'
         }); 
     }
 };
@@ -322,7 +324,7 @@ const getIdeaByUserId = async (req: Request, res: Response, next: NextFunction) 
     } catch (error) {
         return res.status(403).json({
             status: 403, 
-            message: 'Some error occurred.'
+            message: 'malformed request'
         });
     }
 }
@@ -362,7 +364,7 @@ const searchAudience = async (req: Request, res: Response, next: NextFunction) =
     } catch (error) {
         return res.status(403).json({
             status: 403, 
-            message: 'Some error occurred.'
+            message: 'malformed request'
         });
     }
 }
@@ -429,7 +431,7 @@ const ideaDetailByIdeaId = async (req: Request, res: Response, next: NextFunctio
     } catch (error) {
         return res.status(403).json({
             status: 403, 
-            message: 'Some error occurred.'
+            message: 'malformed request'
         });
     }
 };
@@ -463,18 +465,20 @@ const validateIdea = async (req: Request, res: Response, next: NextFunction) => 
     } catch (e) {
         return res.status(403).json({
             status: 403, 
-            message: 'something went wrong'
+            message: 'malformed request'
         });
     }
 };
 
-
 //const countQuestion = async (req: Request, res: Response, next: NextFunction) => {
 const questionCount =  asyncHandler(async (req: Request , res: Response, next: NextFunction) => {  
     const { ideaId } = req.body
+    //await isValidObjectId(ideaId);
+
     if (ideaId == "" || ideaId == null || ideaId == undefined ) {
         return res.status(422).json({success: false, message: "please fill all mandatory fields" });
 	}
+    
     try {
         const idea = await ideaModel.findOne({_id: req.body.ideaId})
         if (idea) {
@@ -493,10 +497,33 @@ const questionCount =  asyncHandler(async (req: Request , res: Response, next: N
     } catch (error) {
         return res.status(403).json({
             status: 403, 
-            message: 'something went wrong'
+            message: 'malformed request'
         });
     }
 });
+
+const getThePoint =  asyncHandler(async (req: Request , res: Response, next: NextFunction) => {
+    try {
+        const idea = await ideaModel.findOne({_id: req.body.ideaId});
+        if (idea) {
+            return res.status(200).json({
+                success: true,
+                point: idea?.points || 5
+            })
+        } else {
+            return res.status(404).json({
+                success: false,
+                message: "ideaId not found"
+            })
+        }
+    } catch (error) {
+        return res.status(403).json({
+            status: 403, 
+            message: 'malformed request'
+        });
+    }
+});
+
 
 
 export default {
@@ -515,5 +542,6 @@ export default {
     getIdeaByUserId,
     updateIdeaStatus,
     validateIdea,
-    questionCount 
+    questionCount,
+    getThePoint 
 }

@@ -14,6 +14,7 @@ export interface IValidate extends Document {
     question_9: Object,
     question_10: Object,
     status: boolean
+    validateAnswer: Object
 }
 
 const ValidateIdeaSchema = new Schema<IValidate>({
@@ -27,76 +28,85 @@ const ValidateIdeaSchema = new Schema<IValidate>({
         required: true,
         ref: 'Idea'
     },
-    question_1: {
-        question: { type: String },
-        answer_A: { type: String },
-        answer_B: { type: String},
-        answer_C: { type: String},
-        answer_D: { type: String},
-    },
-    question_2: {
-        question: { type: String },
-        answer_A: { type: String },
-        answer_B: { type: String},
-        answer_C: { type: String},
-        answer_D: { type: String},
-    },
-    question_3: {
-        question: { type: String },
-        answer_A: { type: String },
-        answer_B: { type: String},
-        answer_C: { type: String},
-        answer_D: { type: String},
-    },
-    question_4: {
-        question: { type: String },
-        answer_A: { type: String },
-        answer_B: { type: String},
-        answer_C: { type: String},
-        answer_D: { type: String},
-    },
-    question_5: {
-        question: { type: String },
-        answer_A: { type: String },
-        answer_B: { type: String},
-        answer_C: { type: String},
-        answer_D: { type: String},
-    },
-    question_6: {
-        question: { type: String },
-        answer_A: { type: String },
-        answer_B: { type: String},
-        answer_C: { type: String},
-        answer_D: { type: String},
-    },
-    question_7: {
-        question: { type: String },
-        answer_A: { type: String },
-        answer_B: { type: String},
-        answer_C: { type: String},
-        answer_D: { type: String},
-    },
-    question_8: {
-        question: { type: String },
-        answer_A: { type: String },
-        answer_B: { type: String},
-        answer_C: { type: String},
-        answer_D: { type: String},
-    },
-    question_9: {
-        question: { type: String },
-        answer_A: { type: String },
-        answer_B: { type: String},
-        answer_C: { type: String},
-        answer_D: { type: String},
-    },
-    question_10: {
-        question: { type: String },
-        answer_A: { type: String },
-        answer_B: { type: String},
-        answer_C: { type: String},
-        answer_D: { type: String},
-    }
+    validateAnswer: [
+        {
+            question: { type: String },
+            answer_A: { type: String },
+            answer_B: { type: String},
+            answer_C: { type: String},
+            answer_D: { type: String},
+        }
+    ],
+    // question_1: {
+    //     question: { type: String },
+    //     answer_A: { type: String },
+    //     answer_B: { type: String},
+    //     answer_C: { type: String},
+    //     answer_D: { type: String},
+    // },
+    // question_2: {
+    //     question: { type: String },
+    //     answer_A: { type: String },
+    //     answer_B: { type: String},
+    //     answer_C: { type: String},
+    //     answer_D: { type: String},
+    // },
+    // question_3: {
+    //     question: { type: String },
+    //     answer_A: { type: String },
+    //     answer_B: { type: String},
+    //     answer_C: { type: String},
+    //     answer_D: { type: String},
+    // },
+    // question_4: {
+    //     question: { type: String },
+    //     answer_A: { type: String },
+    //     answer_B: { type: String},
+    //     answer_C: { type: String},
+    //     answer_D: { type: String},
+    // },
+    // question_5: {
+    //     question: { type: String },
+    //     answer_A: { type: String },
+    //     answer_B: { type: String},
+    //     answer_C: { type: String},
+    //     answer_D: { type: String},
+    // },
+    // question_6: {
+    //     question: { type: String },
+    //     answer_A: { type: String },
+    //     answer_B: { type: String},
+    //     answer_C: { type: String},
+    //     answer_D: { type: String},
+    // },
+    // question_7: {
+    //     question: { type: String },
+    //     answer_A: { type: String },
+    //     answer_B: { type: String},
+    //     answer_C: { type: String},
+    //     answer_D: { type: String},
+    // },
+    // question_8: {
+    //     question: { type: String },
+    //     answer_A: { type: String },
+    //     answer_B: { type: String},
+    //     answer_C: { type: String},
+    //     answer_D: { type: String},
+    // },
+    // question_9: {
+    //     question: { type: String },
+    //     answer_A: { type: String },
+    //     answer_B: { type: String},
+    //     answer_C: { type: String},
+    //     answer_D: { type: String},
+    // },
+    // question_10: {
+    //     question: { type: String },
+    //     answer_A: { type: String },
+    //     answer_B: { type: String},
+    //     answer_C: { type: String},
+    //     answer_D: { type: String},
+    // }
 }, {
     timestamps: true
     }

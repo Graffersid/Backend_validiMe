@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 const jwt = require('jsonwebtoken')
 const asyncHandler = require('express-async-handler')
+const ObjectId = require('mongoose').Types.ObjectId;
 //const userModel = require('../models/User');
 import userModel from "../models/User";
 import { config } from '../config/config';
@@ -8,8 +9,17 @@ import { config } from '../config/config';
 require("dotenv").config();
 
 const isValidObjectId =  asyncHandler(async (req: Request , res: Response, next: NextFunction) => {
-    
+    async function isValidObjectId(id:any){
+        if(ObjectId.isValid(id)){
+            if((String)(new ObjectId(id)) === id)
+                return true;       
+            return false;
+        }
+        return false;
+    }  
 })
+
+
 
 const protect = asyncHandler(async (req: Request , res: Response, next: NextFunction) => {
     let token
@@ -38,4 +48,4 @@ const protect = asyncHandler(async (req: Request , res: Response, next: NextFunc
     }
 })
 
-module.exports = { protect }
+module.exports = { protect, isValidObjectId }
