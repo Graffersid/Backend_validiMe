@@ -44,7 +44,8 @@ router.post('/ideaDetailById', protect, userController.ideaDetailByIdeaId);
 router.get('/searchTargetAudience/:key', protect, userController.searchAudience);
 router.post('/validateIdea', protect, userController.validateIdea);
 router.get('/questionCount', protect, userController.questionCount);
-router.get('/getPoint',protect, userController.getThePoint);
+router.get('/getPointCount',protect, userController.getThePoint);
+router.get('/getValidatedCount', protect, userController.validatedCount);
 
 
 

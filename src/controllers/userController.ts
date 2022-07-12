@@ -444,14 +444,23 @@ const validateIdea = async (req: Request, res: Response, next: NextFunction) => 
 
     try {
         const validate =  await validateIdeaModel.findOne({ $and: [ { userId: userId }, { ideaId: ideaId } ] });
-        if (!validate) {
+        if (validate) {
             const validateIdea = new validateIdeaModel(req.body);
             await validateIdea.save()
 
             const maxPoint: any = 5;
+            //const validated: any = 1;
+
             const userDetails =  await userSchema.findOne({_id: userId})
-           let points: any =  userDetails?.point + maxPoint
+            let points: any =  userDetails?.point + maxPoint
             let updatePoint =  await userSchema.updateOne({_id: userId}, { $set : {point: points}});
+
+            // const validateIdeaDetails =  await validateIdeaModel.findOne({_id: ideaId})
+            // let validatedCounts: any =  validateIdeaDetails?.validatedCount + validated
+
+            // let validatedIdea = await validateIdea.updateOne({ideaId: ideaId}, { $set : {validatedCount: validatedCounts}})
+            // console.log('COUNT :', validatedIdea)
+
             return res.status(201).json({
                 success: true,
                 message: "idea validate successfully"
@@ -524,6 +533,34 @@ const getThePoint =  asyncHandler(async (req: Request , res: Response, next: Nex
     }
 });
 
+const validateIdeaView = asyncHandler(async (req: Request , res: Response, next: NextFunction) => {
+    console.log('call validated functionaliy');
+
+});
+
+const validatedCount = asyncHandler(async (req: Request , res: Response, next: NextFunction) => {
+    
+    try {
+        const idea = await ideaModel.findOne({_id: req.body.ideaId});
+        if (idea) {
+            return res.status(200).json({
+                success: true,
+                validated: idea?.views || 0
+            })
+        } else {
+            return res.status(404).json({
+                success: false,
+                message: "ideaId not found"
+            }) 
+        }
+    } catch (error) {
+        return res.status(403).json({
+            status: 403, 
+            message: 'malformed request'
+        });
+    }
+});
+
 
 
 export default {
@@ -543,5 +580,7 @@ export default {
     updateIdeaStatus,
     validateIdea,
     questionCount,
-    getThePoint 
+    getThePoint,
+    validateIdeaView,
+    validatedCount,
 }

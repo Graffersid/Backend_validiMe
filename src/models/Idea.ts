@@ -14,6 +14,8 @@ export interface IIdea extends Document {
     description: string,
     status: boolean,
     points: number,
+    views: number,
+    validated: number,
     validateQuestion: Object
 }
 
@@ -74,6 +76,12 @@ const IdeaSchema = new Schema<IIdea>(
             }
         ],
         points: {
+            type: Number
+        },
+        views: {
+            type: Number
+        },
+        validated:{
             type: Number
         }
     },

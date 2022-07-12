@@ -3,8 +3,9 @@ import mongoose, { Schema, Document, Types, ObjectId } from "mongoose";
 export interface IValidate extends Document {
     userId: ObjectId;
     ideaId: ObjectId;
-    status: boolean
-    validateAnswer: Object
+    status: boolean;
+    validateAnswer: Object;
+    validatedCount: number;
 }
 
 const ValidateIdeaSchema = new Schema<IValidate>({
@@ -27,6 +28,10 @@ const ValidateIdeaSchema = new Schema<IValidate>({
             answer_D: { type: String},
         }
     ]
+    ,
+    validatedCount:{
+        type: Number
+    }
 }, {
     timestamps: true
     }
