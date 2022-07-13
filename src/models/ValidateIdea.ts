@@ -27,8 +27,7 @@ const ValidateIdeaSchema = new Schema<IValidate>({
             answer_C: { type: String},
             answer_D: { type: String},
         }
-    ]
-    ,
+    ],
     validatedCount:{
         type: Number
     }

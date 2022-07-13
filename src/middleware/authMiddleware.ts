@@ -21,7 +21,7 @@ const isValidObjectId =  asyncHandler(async (req: Request , res: Response, next:
 
 
 
-const protect = asyncHandler(async (req: Request , res: Response, next: NextFunction) => {
+const isLoggedIn = asyncHandler(async (req: Request , res: Response, next: NextFunction) => {
     let token
 
     if(req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
@@ -48,4 +48,4 @@ const protect = asyncHandler(async (req: Request , res: Response, next: NextFunc
     }
 })
 
-module.exports = { protect, isValidObjectId }
+module.exports = { isLoggedIn, isValidObjectId }

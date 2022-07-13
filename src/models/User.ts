@@ -70,6 +70,7 @@ const UserSchema: Schema = new Schema(
         experties: {
             type: String
         },
+
         point: {
             type: Number
         },

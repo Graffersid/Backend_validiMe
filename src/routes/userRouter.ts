@@ -4,7 +4,7 @@ import multer from "multer";
 import userModel from "../models/User";
 import userController from '../controllers/userController';
 import { config } from '../config/config';
-const { protect } = require('../middleware/authMiddleware');
+const { isLoggedIn } = require('../middleware/authMiddleware');
 
 //import {protect} from '../middleware/authMiddleware';
 
@@ -28,24 +28,29 @@ const imgURL = 'http://192.168.1.79/uploads/'
 router.post('/signup', userController.signupUser);
 router.post('/login', userController.loginUser);
 router.put('/updateProfile', userController.updateProfile);
-router.post('/forgotPassword', protect, userController.forgotPassword);
-router.put('/updatePassword', protect, userController.updateUserPassword);
-router.get('/userList', protect, userController.getUserList);
-router.post('/logout', protect, userController.logout);
-router.post('/removeProfilePicture', protect,userController.removeProfilePicture);
+router.post('/forgotPassword', isLoggedIn, userController.forgotPassword);
+router.put('/updatePassword', isLoggedIn, userController.updateUserPassword);
+router.get('/userList', isLoggedIn, userController.getUserList);
+router.post('/logout', isLoggedIn, userController.logout);
+router.post('/removeProfilePicture', isLoggedIn,userController.removeProfilePicture);
 
 /* idea routes */
-router.post('/postIdea', protect, userController.postIdea);
+router.post('/postIdea', isLoggedIn, userController.postIdea);
 router.get('/ideaList',  userController.getIdeaList);
-router.post('/updateStatus', protect, userController.updateIdeaStatus);
-router.post('/getIdeaByUserId', protect, userController.getIdeaByUserId);
-router.post('/ideaDetailById', protect, userController.ideaDetailByIdeaId);
+router.post('/updateStatus', isLoggedIn, userController.updateIdeaStatus);
+router.post('/getIdeaByUserId', isLoggedIn, userController.getIdeaByUserId);
+router.post('/ideaDetailById', isLoggedIn, userController.ideaDetailByIdeaId);
 //router.post('/searchTargetAudience', protect, userController.searchWithTargetAudience);
-router.get('/searchTargetAudience/:key', protect, userController.searchAudience);
-router.post('/validateIdea', protect, userController.validateIdea);
-router.get('/questionCount', protect, userController.questionCount);
-router.get('/getPointCount',protect, userController.getThePoint);
-router.get('/getValidatedCount', protect, userController.validatedCount);
+router.get('/searchTargetAudience/:key', isLoggedIn, userController.searchAudience);
+router.post('/validateIdea', isLoggedIn, userController.validateIdea);
+router.get('/questionCount', isLoggedIn, userController.questionCount);
+router.get('/getPointCount', isLoggedIn, userController.getThePoint);
+router.get('/getValidateIdeaCount', isLoggedIn, userController.validateIdeaCount);
+
+//under developement functionliy working 
+//router.get('/getIdeaViewCount', isLoggedIn, userController.getIdeaViewCount);
+
+router.get('/leaderBoard', isLoggedIn, userController.getLeaderBoard);
 
 
 

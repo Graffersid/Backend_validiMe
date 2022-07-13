@@ -487,7 +487,6 @@ const questionCount =  asyncHandler(async (req: Request , res: Response, next: N
     if (ideaId == "" || ideaId == null || ideaId == undefined ) {
         return res.status(422).json({success: false, message: "please fill all mandatory fields" });
 	}
-    
     try {
         const idea = await ideaModel.findOne({_id: req.body.ideaId})
         if (idea) {
@@ -538,9 +537,10 @@ const validateIdeaView = asyncHandler(async (req: Request , res: Response, next:
 
 });
 
-const validatedCount = asyncHandler(async (req: Request , res: Response, next: NextFunction) => {
-    
+
+const validateIdeaCount = asyncHandler(async (req: Request , res: Response, next: NextFunction) => {
     try {
+        //
         const idea = await ideaModel.findOne({_id: req.body.ideaId});
         if (idea) {
             return res.status(200).json({
@@ -560,6 +560,48 @@ const validatedCount = asyncHandler(async (req: Request , res: Response, next: N
         });
     }
 });
+
+const getLeaderBoard = async (req: Request , res: Response, next: NextFunction) => {
+    console.log('call getLeaderBoard functionaliy');
+    try {
+        const users = await userSchema.find().sort({point:-1})
+        
+        let leaderBoard_arr = [];
+        if(users){
+            var rank: number = 0;
+            const leaderBoard = { rank, ...users }
+            /*
+            for (var leader_board of users) {
+                leaderBoard_arr.push(leader_board.fullName)
+                leaderBoard_arr.push(leader_board.point)
+                leaderBoard_arr.push(leader_board.images)
+            }
+            */
+
+            // var leader_board = {
+            //     key1: datas[0].fullName,
+            // };
+            return res.status(200).json({
+                success: true,
+                //leaderBoard: leaderBoard
+                leaderBoard: users
+            })
+
+        } else {
+            return res.status(404).json({
+                success: false,
+                message: "data not found"
+            })
+        }
+    } catch (error) {
+        return res.status(403).json({
+            status: 403, 
+            message: 'malformed request'
+        });
+    }
+};
+
+
 
 
 
@@ -582,5 +624,6 @@ export default {
     questionCount,
     getThePoint,
     validateIdeaView,
-    validatedCount,
+    validateIdeaCount,
+    getLeaderBoard
 }
