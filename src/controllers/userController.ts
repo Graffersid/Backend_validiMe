@@ -273,9 +273,10 @@ const getIdeaList = async (req: Request, res: Response, next: NextFunction) => {
 
 const updateIdeaStatus = async (req: Request, res: Response, next: NextFunction) => {
     const {_id, status } = req.body
-    if (_id == undefined || _id == null || _id == "" || status == null || status == "") {
-		return res.status(422).json({success: false, message: "please fill all fields" });
-	}
+    console.log(req.body)
+    // if (_id == undefined || _id == null || _id == "" || status == null || status == "") {
+	// 	return res.status(422).json({success: false, message: "please fill all fields" });
+	// }
     try {
         const idea =  await ideaModel.findOne({_id: _id})
         if(!idea) {
@@ -286,7 +287,11 @@ const updateIdeaStatus = async (req: Request, res: Response, next: NextFunction)
         }
         else {
             let updatedStatus =  await ideaModel.updateOne({_id}, { $set : {status: req.body.status}});
-            console.log('updatedStatus', updatedStatus)
+            let validatedStatus =  await validateIdeaModel.updateMany({ideaId:req.body._id}, { $set : {status: req.body.status}});
+            /*
+                console.log('updatedStatus', updatedStatus)
+                console.log('validatedStatus :', validatedStatus)
+            */
             return res.status(201).json({
                 success: true,
                 message: "status update successfully"
@@ -446,23 +451,17 @@ const validateIdea = async (req: Request, res: Response, next: NextFunction) => 
     try {
         const validate =  await validateIdeaModel.findOne({ $and: [ { userId: userId }, { ideaId: ideaId } ] });
         if (validate) {
-            const maxPoint: any = 5;
 
-            const validateIdea = new validateIdeaModel(req.body);
+            let status: boolean = true;
+            const points: any = 5;
+
+            const validatedideaDetails = {status, points, ...req.body }
+            const validateIdea = new validateIdeaModel(validatedideaDetails);
             await validateIdea.save()
 
-            
-            //const validated: any = 1;
-
             const userDetails =  await userSchema.findOne({_id: userId})
-            let points: any =  userDetails?.point + maxPoint
-            let updatePoint =  await userSchema.updateOne({_id: userId}, { $set : {point: points}});
-
-            // const validateIdeaDetails =  await validateIdeaModel.findOne({_id: ideaId})
-            // let validatedCounts: any =  validateIdeaDetails?.validatedCount + validated
-
-            // let validatedIdea = await validateIdea.updateOne({ideaId: ideaId}, { $set : {validatedCount: validatedCounts}})
-            // console.log('COUNT :', validatedIdea)
+            let maxPoint: any =  userDetails?.point + points
+            let updatePoint =  await userSchema.updateOne({_id: userId}, { $set : {point: maxPoint}});
 
             return res.status(201).json({
                 success: true,
@@ -668,6 +667,22 @@ const getLeaderBoard = async (req: Request , res: Response, next: NextFunction) 
         });
     }
 };
+const validatedIdeaList = async (req: Request , res: Response, next: NextFunction) => {
+    const list = await validateIdeaModel.find().sort({updatedAt:-1})
+    if(list.length>0) {
+        return res.status(200).json({
+            success: true,
+            validatedIdeaList: list
+        })
+    } else {
+        return res.status(404).json({
+            success: false,
+            message: "data not found"
+        })
+    }
+}
+
+
 
 
 export default {
@@ -687,6 +702,7 @@ export default {
     getIdeaByUserId,
     updateIdeaStatus,
     validateIdea,
+    validatedIdeaList,
     questionCount,
     getThePoint,
     validateIdeaView,

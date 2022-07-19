@@ -42,9 +42,11 @@ router.post('/updateStatus', isLoggedIn, userController.updateIdeaStatus);
 router.post('/getIdeaByUserId', isLoggedIn, userController.getIdeaByUserId);
 router.post('/ideaDetailById', isLoggedIn, userController.ideaDetailByIdeaId);
 //router.post('/searchTargetAudience', protect, userController.searchWithTargetAudience);
+
+/* validate idea routes */
 router.get('/searchTargetAudience/:key', isLoggedIn, userController.searchAudience);
 router.post('/validateIdea', isLoggedIn, userController.validateIdea);
-
+router.get('/validatedIdeaList', isLoggedIn, userController.validatedIdeaList);
 
 /* count routes */
 router.get('/validatedIdeaCount', isLoggedIn, userController.validateIdeaCount);
@@ -56,6 +58,8 @@ router.get('/getPointCount', isLoggedIn, userController.getThePoint);
 /* dashboard routes */
 router.get('/leaderBoard', isLoggedIn, userController.getLeaderBoard);
 router.post('/myIdea', isLoggedIn, userController.myIdea);
+
+
 
 
 
