@@ -81,7 +81,7 @@ const signupUser = async (req: Request, res: Response, next: NextFunction) =>{
 
 const loginUser = async (req: Request, res: Response, next: NextFunction) =>{
     const {email, password} = req.body
-    if(!email || !password || email == "" || password == ""){
+    if(!email || !password || email == "" || password == "") {
         return res.status(422).json({success: false, message: "Please add all fields"});
     }
     const user =  await userSchema.findOne({email})
@@ -229,7 +229,8 @@ const postIdea = async (req: Request, res: Response, next: NextFunction) => {
 	}
     try {
         var points: number = 5;
-        const ideaDetails = { points, ...req.body }
+        let views: number = 0;
+        const ideaDetails = {views, points, ...req.body }
         const newIdea = new ideaModel(ideaDetails);
         await newIdea.save().then((response: any) => {
             return res.status(201).json({
@@ -445,10 +446,12 @@ const validateIdea = async (req: Request, res: Response, next: NextFunction) => 
     try {
         const validate =  await validateIdeaModel.findOne({ $and: [ { userId: userId }, { ideaId: ideaId } ] });
         if (validate) {
+            const maxPoint: any = 5;
+
             const validateIdea = new validateIdeaModel(req.body);
             await validateIdea.save()
 
-            const maxPoint: any = 5;
+            
             //const validated: any = 1;
 
             const userDetails =  await userSchema.findOne({_id: userId})
@@ -537,10 +540,59 @@ const validateIdeaView = asyncHandler(async (req: Request , res: Response, next:
 
 });
 
+const viewsIdea = asyncHandler(async (req: Request , res: Response, next: NextFunction) => {
+    try {
+        const ideaDetails = await ideaModel.findOne({_id: req.body.ideaId}).populate('userId')
+        //console.log('ideaDetails', ideaDetails)
+        if (ideaDetails) {
+            const viewUser: any = 1;
+            let views: any =  ideaDetails?.views + viewUser
+            let updateViews =  await ideaModel.updateOne({_id: req.body.ideaId}, { $set : {views: views}});
+            //console.log('updateViews :', updateViews)
+            return res.status(201).json({
+                success: true,
+                ideaDetail: ideaDetails,
+                //message: 'idea view successfully'
+            })
+        } else {
+            return res.status(404).json({
+                success: false,
+                message: "ideaId not found"
+            })
+        }
+    } catch (error) {
+        return res.status(403).json({
+            status: 403, 
+            message: 'malformed request'
+        }); 
+    }
+});
 
 const validateIdeaCount = asyncHandler(async (req: Request , res: Response, next: NextFunction) => {
     try {
-        //
+        const validateIdea = await validateIdeaModel.find().count()
+        if (validateIdea) {
+            console.log('validateIdea :', validateIdea)
+            return res.status(200).json({
+                success: true,
+                validated: validateIdea || 0
+            })
+        } else {
+            return res.status(200).json({
+                success: true,
+                message: "idea not validated"
+            })
+        } 
+    } catch (error) {
+        return res.status(403).json({
+            status: 403, 
+            message: 'malformed request'
+        });
+    }
+});
+
+const getViewsIdeaCount = asyncHandler(async (req: Request , res: Response, next: NextFunction) => {
+    try {
         const idea = await ideaModel.findOne({_id: req.body.ideaId});
         if (idea) {
             return res.status(200).json({
@@ -561,32 +613,48 @@ const validateIdeaCount = asyncHandler(async (req: Request , res: Response, next
     }
 });
 
-const getLeaderBoard = async (req: Request , res: Response, next: NextFunction) => {
-    console.log('call getLeaderBoard functionaliy');
-    try {
-        const users = await userSchema.find().sort({point:-1})
-        
-        let leaderBoard_arr = [];
-        if(users){
-            var rank: number = 0;
-            const leaderBoard = { rank, ...users }
-            /*
-            for (var leader_board of users) {
-                leaderBoard_arr.push(leader_board.fullName)
-                leaderBoard_arr.push(leader_board.point)
-                leaderBoard_arr.push(leader_board.images)
-            }
-            */
 
-            // var leader_board = {
-            //     key1: datas[0].fullName,
-            // };
+const myIdea = async (req: Request, res: Response, next: NextFunction) => {
+    const {userId} = req.body
+    if (userId == undefined || userId == null || userId == "") {
+		return res.status(422).json({success: false, message: "userId cannot be blank" });
+	}
+
+    try {
+        const idea =  await ideaModel.find({userId})
+        if(idea.length>0) {
+            return res.status(201).json({
+                success: true,
+                message: "my Idea list",
+                data: idea
+            })
+        } 
+        else {
+            return res.status(404).json({
+                status: 404, 
+                message: "no idea found"
+            });
+        }
+    } catch (error) {
+        return res.status(403).json({
+            status: 403, 
+            message: 'malformed request'
+        });
+    }
+}
+
+const getLeaderBoard = async (req: Request , res: Response, next: NextFunction) => {
+    try {
+        const topLeader = await userSchema.find({}, {_id: 0, fullName: 1, point: 1, images: 1} ).sort({point:-1})
+        if(topLeader.length>0) {
+           
+           let rank: any = 1
+           const datas = { rank, ...topLeader }
+
             return res.status(200).json({
                 success: true,
-                //leaderBoard: leaderBoard
-                leaderBoard: users
+                leaderBoard: datas
             })
-
         } else {
             return res.status(404).json({
                 success: false,
@@ -602,9 +670,6 @@ const getLeaderBoard = async (req: Request , res: Response, next: NextFunction) 
 };
 
 
-
-
-
 export default {
     logout,
     loginUser,
@@ -616,6 +681,7 @@ export default {
     removeProfilePicture,
     postIdea,
     getIdeaList,
+    viewsIdea,
     ideaDetailByIdeaId,
     searchAudience,
     getIdeaByUserId,
@@ -625,5 +691,7 @@ export default {
     getThePoint,
     validateIdeaView,
     validateIdeaCount,
+    getViewsIdeaCount,
+    myIdea,
     getLeaderBoard
 }

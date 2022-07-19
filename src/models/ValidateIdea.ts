@@ -4,6 +4,7 @@ export interface IValidate extends Document {
     userId: ObjectId;
     ideaId: ObjectId;
     status: boolean;
+    points: number,
     validateAnswer: Object;
     validatedCount: number;
 }
@@ -28,6 +29,13 @@ const ValidateIdeaSchema = new Schema<IValidate>({
             answer_D: { type: String},
         }
     ],
+    status: {
+        type: Boolean,
+        default: true
+    },
+    points: {
+        type: Number
+    },
     validatedCount:{
         type: Number
     }
