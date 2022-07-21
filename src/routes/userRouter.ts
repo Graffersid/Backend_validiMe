@@ -65,6 +65,7 @@ router.post('/myIdea', isLoggedIn, userController.myIdea);
 
 
 
+
 /*------------------------- start uploadProfilePicture functionaliy --------------------------*/
 
 router.post('/uploadProfilePicture', upload.single('image'), async (req: Request, res: Response, next: NextFunction) => {
