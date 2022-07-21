@@ -35,5 +35,9 @@ const FollowerSchema: Schema = new Schema({
     status: {
         type: Boolean,
         default: true
-    },
-})
+    }
+},
+    {
+        timestamps: true
+    }
+)

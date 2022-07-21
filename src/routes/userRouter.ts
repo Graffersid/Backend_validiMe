@@ -59,6 +59,10 @@ router.get('/getPointCount', isLoggedIn, userController.getThePoint);
 router.get('/leaderBoard', isLoggedIn, userController.getLeaderBoard);
 router.post('/myIdea', isLoggedIn, userController.myIdea);
 
+/* notification routes */
+router.get('/getNotification', isLoggedIn, userController.getNotification);
+router.post('/updateNotificationStatus', isLoggedIn, userController.updateNotificationStatus);
+
 
 
 

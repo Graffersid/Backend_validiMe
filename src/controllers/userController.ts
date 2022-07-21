@@ -10,6 +10,7 @@ import { config } from '../config/config';
 import userSchema from "../models/User";
 import ideaModel from '../models/Idea';
 import validateIdeaModel from '../models/ValidateIdea';
+import notificationModel from "../models/Notification";
 
 import { any } from "joi";
 import User from "../models/User";
@@ -447,7 +448,6 @@ const validateIdea = async (req: Request, res: Response, next: NextFunction) => 
     if (userId == undefined || userId == null || userId == "" || ideaId == null || ideaId == "" || ideaId == undefined ) {
         return res.status(422).json({success: false, message: "please fill all mandatory fields" });
 	}
-
     try {
         const validate =  await validateIdeaModel.findOne({ $and: [ { userId: userId }, { ideaId: ideaId } ] });
         if (validate) {
@@ -458,6 +458,15 @@ const validateIdea = async (req: Request, res: Response, next: NextFunction) => 
             const validatedideaDetails = {status, points, ...req.body }
             const validateIdea = new validateIdeaModel(validatedideaDetails);
             await validateIdea.save()
+
+            const postNotification = new notificationModel({
+                userId: req.body.userId,
+                fullName: req.body.fullName,
+                imageURL: req.body.imageURL,
+                message: req.body.message,
+                notification_type: 'validate Idea',
+            })
+            await postNotification.save()
 
             const userDetails =  await userSchema.findOne({_id: userId})
             let maxPoint: any =  userDetails?.point + points
@@ -682,6 +691,38 @@ const validatedIdeaList = async (req: Request , res: Response, next: NextFunctio
     }
 }
 
+/* notification functionaliy */
+const getNotification = async (req: Request , res: Response, next: NextFunction) => {
+    const notificationList = await notificationModel.find({userId: req.body.userId, status: true}, {_id: 1, fullName: 1, imageURL: 1, message: 1, createdAt: 1} ).sort({_id:-1}).limit(10);
+    if(notificationList.length>0) {
+        return res.status(200).json({
+            success: true,
+            notification: notificationList
+        })
+    } else {
+        return res.status(404).json({
+            success: false,
+            message: "notification not found"
+        })
+    }
+}
+
+const updateNotificationStatus = async (req: Request , res: Response, next: NextFunction) => {
+    const notification = await notificationModel.findOne({_id: req.body._id})
+    if (notification) {
+        let updateStatus =  await notificationModel.updateOne({_id: req.body._id}, { $set : {status: false}});
+        return res.status(404).json({
+            success: true,
+            message: "status update successfully"
+        })
+    } else {
+        return res.status(404).json({
+            success: false,
+            message: "data not found"
+        })
+    }
+}
+
 
 
 
@@ -709,5 +750,7 @@ export default {
     validateIdeaCount,
     getViewsIdeaCount,
     myIdea,
-    getLeaderBoard
+    getLeaderBoard,
+    getNotification,
+    updateNotificationStatus
 }

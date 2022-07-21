@@ -14,14 +14,16 @@ export interface INotificationModel extends INotification, Document {
 
 const NotificationSchema: Schema = new Schema(
     {
-        sender_id: {
+        userId: {
             type: Schema.Types.ObjectId,
             ref: 'User'
         },
-        receiver_id: {
-            type: Schema.Types.ObjectId,
-            ref: 'User'
+        fullName: {
+            type: String
         },
+        imageURL: {
+            type: String
+        },        
         notification_type: {
             type: String
         },
@@ -31,7 +33,10 @@ const NotificationSchema: Schema = new Schema(
         status: {
             type: Boolean,
             default: true
-        },
+        }
+    },
+    {
+        timestamps: true
     }
 )
 
