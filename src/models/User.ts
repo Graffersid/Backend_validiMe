@@ -17,6 +17,7 @@ export interface IUser {
     following: number;
     followers: number;
     point: number;
+    rewardPoint: number;
 }
 
 export interface IUserModel extends IUser, Document {
@@ -71,6 +72,9 @@ const UserSchema: Schema = new Schema(
             type: String
         },
         point: {
+            type: Number
+        },
+        rewardPoint: {
             type: Number
         },
         following: {

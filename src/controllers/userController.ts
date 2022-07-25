@@ -11,6 +11,7 @@ import userSchema from "../models/User";
 import ideaModel from '../models/Idea';
 import validateIdeaModel from '../models/ValidateIdea';
 import notificationModel from "../models/Notification";
+import TransactionModel from "../models/Transaction";
 
 import { any } from "joi";
 import User from "../models/User";
@@ -450,8 +451,8 @@ const validateIdea = async (req: Request, res: Response, next: NextFunction) => 
 	}
     try {
         const validate =  await validateIdeaModel.findOne({ $and: [ { userId: userId }, { ideaId: ideaId } ] });
-        if (validate) {
-
+        //if (!validate) { active after complate
+        if (!validate) {
             let status: boolean = true;
             const points: any = 5;
 
@@ -459,6 +460,7 @@ const validateIdea = async (req: Request, res: Response, next: NextFunction) => 
             const validateIdea = new validateIdeaModel(validatedideaDetails);
             await validateIdea.save()
 
+            /* notification functionaliy */
             const postNotification = new notificationModel({
                 userId: req.body.userId,
                 fullName: req.body.fullName,
@@ -467,6 +469,16 @@ const validateIdea = async (req: Request, res: Response, next: NextFunction) => 
                 notification_type: 'validate Idea',
             })
             await postNotification.save()
+            const postTransaction = new TransactionModel({
+                userId: req.body.userId,
+                ideaId: req.body.ideaId,
+                title: req.body.title,
+                types: "validated Points",
+                point: points
+            })
+            console.log('postTransaction :', postTransaction)
+            await postTransaction.save()
+            /* transaction functionaliy */
 
             const userDetails =  await userSchema.findOne({_id: userId})
             let maxPoint: any =  userDetails?.point + points
@@ -677,51 +689,146 @@ const getLeaderBoard = async (req: Request , res: Response, next: NextFunction) 
     }
 };
 const validatedIdeaList = async (req: Request , res: Response, next: NextFunction) => {
-    const list = await validateIdeaModel.find().sort({updatedAt:-1})
-    if(list.length>0) {
-        return res.status(200).json({
-            success: true,
-            validatedIdeaList: list
-        })
-    } else {
-        return res.status(404).json({
-            success: false,
-            message: "data not found"
-        })
+    try {
+        const list = await validateIdeaModel.find().sort({updatedAt:-1})
+        if(list.length>0) {
+            return res.status(200).json({
+                success: true,
+                validatedIdeaList: list
+            })
+        } else {
+            return res.status(404).json({
+                success: false,
+                message: "data not found"
+            })
+        }
+        
+    } catch (error) {
+        return res.status(403).json({
+            status: 403, 
+            message: 'malformed request'
+        }); 
     }
 }
 
 /* notification functionaliy */
 const getNotification = async (req: Request , res: Response, next: NextFunction) => {
-    const notificationList = await notificationModel.find({userId: req.body.userId, status: true}, {_id: 1, fullName: 1, imageURL: 1, message: 1, createdAt: 1} ).sort({_id:-1}).limit(10);
-    if(notificationList.length>0) {
-        return res.status(200).json({
-            success: true,
-            notification: notificationList
-        })
-    } else {
-        return res.status(404).json({
-            success: false,
-            message: "notification not found"
-        })
+    try {
+        const notificationList = await notificationModel.find({userId: req.body.userId, status: true}, {_id: 1, fullName: 1, imageURL: 1, message: 1, createdAt: 1} ).sort({_id:-1}).limit(10);
+        if(notificationList.length>0) {
+            return res.status(200).json({
+                success: true,
+                notification: notificationList
+            })
+        } else {
+            return res.status(404).json({
+                success: false,
+                message: "notification not found"
+            })
+        } 
+    } catch (error) {
+        return res.status(403).json({
+            status: 403, 
+            message: 'malformed request'
+        });
     }
+    
 }
 
 const updateNotificationStatus = async (req: Request , res: Response, next: NextFunction) => {
-    const notification = await notificationModel.findOne({_id: req.body._id})
-    if (notification) {
-        let updateStatus =  await notificationModel.updateOne({_id: req.body._id}, { $set : {status: false}});
-        return res.status(404).json({
-            success: true,
-            message: "status update successfully"
-        })
-    } else {
-        return res.status(404).json({
-            success: false,
-            message: "data not found"
-        })
+    try {
+        const notification = await notificationModel.findOne({_id: req.body._id})
+        if (notification) {
+            let updateStatus =  await notificationModel.updateOne({_id: req.body._id}, { $set : {status: false}});
+            return res.status(404).json({
+                success: true,
+                message: "status update successfully"
+            })
+        } else {
+            return res.status(404).json({
+                success: false,
+                message: "data not found"
+            })
+        }
+        
+    } catch (error) {
+        return res.status(403).json({
+            status: 403, 
+            message: 'malformed request'
+        });
     }
 }
+
+const transactionHistoryByUser = async (req: Request , res: Response, next: NextFunction) => {
+    const {userId} = req.body
+    if (userId == undefined || userId == null || userId == "") {
+		return res.status(422).json({success: false, message: "userId cannot be blank" });
+	}
+    try {
+        let user = await userSchema.findOne({_id: userId})
+        if(user){
+            const transaction = await TransactionModel.find({userId}, {_id: 1, title: 1, types: 1, point: 1, createdAt: 1} ).sort({_id:-1}).limit(100);
+            if(transaction.length>0) {
+                return res.status(200).json({
+                    success: true,
+                    message: "POINTS TRANSACTION HISTORY",
+                    transactionHistory: transaction
+                })
+            } else {
+                return res.status(404).json({
+                    success: false,
+                    message: "transaction not found"
+                })
+            }
+        } else {
+            return res.status(404).json({
+                success: false,
+                message: "user not found"
+            })
+        }
+    } catch (error) {
+        return res.status(403).json({
+            status: 403, 
+            message: 'malformed request'
+        });
+    }
+}
+
+const getRewardPointByUser = async (req: Request , res: Response, next: NextFunction) => {
+    const {userId} = req.body
+    if (userId == undefined || userId == null || userId == "") {
+		return res.status(422).json({success: false, message: "userId cannot be blank" });
+	}
+    try {
+        const reward = await TransactionModel.aggregate([{ $group: {_id: '$userId', rewardPoint: { $sum: "$point" } } } ]);
+        if(reward.length>0) {
+            let point = [];
+            for (let i = 0; i < reward.length; i++) {
+                if (reward[i]._id == userId) {
+                    point.push(reward[i].rewardPoint);
+                }
+            }
+            let updateRewardPoint =  await userSchema.updateOne({_id: userId}, { $set : {rewardPoint: point[0]}});
+
+            return res.status(200).json({
+                success: true,
+                message: "MY REWARD POINT",
+                Reward: point[0]
+            })
+        } else {
+            return res.status(404).json({
+                success: false,
+                message: "user not found"
+            })
+        }  
+    } catch (error) {
+        return res.status(403).json({
+            status: 403, 
+            message: 'malformed request'
+        });
+    } 
+}
+
 
 
 
@@ -752,5 +859,7 @@ export default {
     myIdea,
     getLeaderBoard,
     getNotification,
-    updateNotificationStatus
+    updateNotificationStatus,
+    transactionHistoryByUser,
+    getRewardPointByUser
 }

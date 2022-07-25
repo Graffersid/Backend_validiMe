@@ -61,7 +61,11 @@ router.post('/myIdea', isLoggedIn, userController.myIdea);
 
 /* notification routes */
 router.get('/getNotification', isLoggedIn, userController.getNotification);
-router.post('/updateNotificationStatus', isLoggedIn, userController.updateNotificationStatus);
+router.put('/updateNotificationStatus', isLoggedIn, userController.updateNotificationStatus);
+
+/* transaction routes */
+router.post('/getTransactionHistoryByUser', isLoggedIn, userController.transactionHistoryByUser);
+router.post('/rewardPointsByUser', isLoggedIn, userController.getRewardPointByUser);
 
 
 
