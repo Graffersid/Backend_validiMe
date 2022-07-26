@@ -1,11 +1,13 @@
 import { NextFunction, Request, Response } from "express";
 const asyncHandler = require('express-async-handler')
+import { config } from '../config/config';
 import { Result } from "express-validator";
+const subtract = require('subtract')
+const jwt = require('jsonwebtoken');
 import mongoose from "mongoose";
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
-import { config } from '../config/config';
+
 
 import userSchema from "../models/User";
 import ideaModel from '../models/Idea';
@@ -224,22 +226,42 @@ const logout = async (req: Request, res: Response, next: NextFunction) => {
     })
 };
 
+
 const postIdea = async (req: Request, res: Response, next: NextFunction) => {
     const {userId, } = req.body
     if (userId == undefined || userId == null || userId == "") {
         return res.status(422).json({success: false, message: "userId cannot be blank" });
 	}
     try {
-        var points: number = 5;
-        let views: number = 0;
-        const ideaDetails = {views, points, ...req.body }
-        const newIdea = new ideaModel(ideaDetails);
-        await newIdea.save().then((response: any) => {
-            return res.status(201).json({
-                status: 201, 
-                message: "idea post successfully"
+        const user =  await userSchema.findOne({_id: userId})
+        
+        const rewardPoint: any =  user?.rewardPoint;
+
+        if(rewardPoint >= 10) {
+
+            var points: number = 5;
+            let views: number = 0;
+            const ideaDetails = {views, points, ...req.body }
+            const shareIdea = new ideaModel(ideaDetails);
+            await shareIdea.save()
+           
+            const subtractPoint = subtract(rewardPoint, 10)
+            await userSchema.updateMany({_id: userId}, {
+                $set : {
+                    point: subtractPoint, rewardPoint: subtractPoint
+                }
+            }).then((response: any) => {
+                return res.status(201).json({
+                    status: 201, 
+                    message: "idea post successfully"
+                });
+            })
+        } else {
+            return res.status(400).json({
+                status: 400, 
+                message: 'you need 10 point for share this idea'
             });
-        })
+        }
     } catch (e) {
         console.log('error :', e)
         return res.status(403).json({
@@ -275,7 +297,6 @@ const getIdeaList = async (req: Request, res: Response, next: NextFunction) => {
 
 const updateIdeaStatus = async (req: Request, res: Response, next: NextFunction) => {
     const {_id, status } = req.body
-    console.log(req.body)
     // if (_id == undefined || _id == null || _id == "" || status == null || status == "") {
 	// 	return res.status(422).json({success: false, message: "please fill all fields" });
 	// }
@@ -451,8 +472,8 @@ const validateIdea = async (req: Request, res: Response, next: NextFunction) => 
 	}
     try {
         const validate =  await validateIdeaModel.findOne({ $and: [ { userId: userId }, { ideaId: ideaId } ] });
-        //if (!validate) { active after complate
-        if (!validate) {
+        /* if (!validate) { active after complate */
+        if (validate) {
             let status: boolean = true;
             const points: any = 5;
 
@@ -469,6 +490,7 @@ const validateIdea = async (req: Request, res: Response, next: NextFunction) => 
                 notification_type: 'validate Idea',
             })
             await postNotification.save()
+
             const postTransaction = new TransactionModel({
                 userId: req.body.userId,
                 ideaId: req.body.ideaId,
@@ -476,13 +498,12 @@ const validateIdea = async (req: Request, res: Response, next: NextFunction) => 
                 types: "validated Points",
                 point: points
             })
-            console.log('postTransaction :', postTransaction)
             await postTransaction.save()
             /* transaction functionaliy */
 
             const userDetails =  await userSchema.findOne({_id: userId})
             let maxPoint: any =  userDetails?.point + points
-            let updatePoint =  await userSchema.updateOne({_id: userId}, { $set : {point: maxPoint}});
+            let updatePoint =  await userSchema.updateMany({_id: userId}, { $set : {point: maxPoint, rewardPoint:maxPoint}});
 
             return res.status(201).json({
                 success: true,
