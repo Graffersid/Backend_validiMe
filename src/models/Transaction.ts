@@ -7,6 +7,7 @@ export interface ITransaction extends Document {
     types: string,
     point: number;
     rewardPoint: number;
+    status: string,
 }
 
 const TransactionSchema = new Schema<ITransaction>(
@@ -18,7 +19,6 @@ const TransactionSchema = new Schema<ITransaction>(
         },
         ideaId: {
             type: Schema.Types.ObjectId,
-            required: true,
             ref: 'Idea'
         },
         title: {
@@ -32,7 +32,10 @@ const TransactionSchema = new Schema<ITransaction>(
         },
         rewardPoint: {
             type: Number
-        }
+        },
+        status: {
+            type: String
+        },
     },
     {
         timestamps: true
