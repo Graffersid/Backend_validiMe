@@ -67,9 +67,11 @@ router.put('/updateNotificationStatus', isLoggedIn, userController.updateNotific
 router.post('/getTransactionHistoryByUser', isLoggedIn, userController.transactionHistoryByUser);
 router.post('/rewardPointsByUser', isLoggedIn, userController.getRewardPointByUser);
 
-/* working router */
-router.get('/getFollowers', isLoggedIn, userController.getFollower);
-router.get('/getFollowing', isLoggedIn, userController.getFollowing)
+/* analticsy router */
+router.post('/follow', userController.follow);
+router.post('/following', userController.following);
+router.get('/followersCount', userController.followersCount);
+router.get('/followingCount', userController.getFollowing);
 
 
 /*------------------------- start uploadProfilePicture functionaliy --------------------------*/

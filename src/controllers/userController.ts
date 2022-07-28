@@ -14,6 +14,8 @@ import ideaModel from '../models/Idea';
 import validateIdeaModel from '../models/ValidateIdea';
 import notificationModel from "../models/Notification";
 import TransactionModel from "../models/Transaction";
+import FollowersModel from "../models/Followers";
+import FollowingModel from "../models/Following";
 
 import { any } from "joi";
 import User from "../models/User";
@@ -638,7 +640,7 @@ const validateIdeaCount = asyncHandler(async (req: Request, res: Response, next:
     try {
         const validateIdea = await validateIdeaModel.find().count()
         if (validateIdea) {
-            console.log('validateIdea :', validateIdea)
+           // console.log('validateIdea :', validateIdea)
             return res.status(200).json({
                 success: true,
                 validated: validateIdea || 0
@@ -874,22 +876,111 @@ const getRewardPointByUser = async (req: Request, res: Response, next: NextFunct
     }
 }
 
-
-const getFollower = async (req: Request, res: Response, next: NextFunction) => {
-    console.log('CTRL')
-    return res.status(200).json({
-        success: true,
-        data: 100
-    })
+const follow =async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const followers = new FollowersModel({
+            userId: req.body.userId,
+            followerId: req.body.followerId,
+            followerName: req.body.followerName,
+            message: `${req.body.userName} follow to ${req.body.followerName}`,
+            status: 'follow'
+        });
+        await followers.save().then(result => {
+            if (result) {
+                return res.status(200).json({
+                    success: true,
+                    message: `${req.body.followerName} follow successfully`
+                }) 
+            } else {
+                return res.status(404).json({
+                    success: false,
+                    message: "user not found"
+                })
+            }
+        })
+    } catch (error) {
+        return res.status(403).json({
+            status: 403,
+            message: 'malformed request'
+        });
+        
+    }    
 }
+
+const following =async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const followers = new FollowingModel({
+            userId: req.body.userId,
+            followingId: req.body.followingId,
+            followingName: req.body.followingName,
+            message: `${req.body.userName} following to ${req.body.followingName}`,
+            status: 'following'
+        });
+        await followers.save().then(result => {
+            if (result) {
+                return res.status(200).json({
+                    success: true,
+                    message: `${req.body.followingName} following successfully`
+                }) 
+            } else {
+                return res.status(404).json({
+                    success: false,
+                    message: "user not found"
+                })
+            }
+        })
+    } catch (error) {
+        return res.status(403).json({
+            status: 403,
+            message: 'malformed request'
+        });
+    }
+}
+
+const followersCount = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const followCount = await FollowersModel.find({userId: req.body.userId}).count()
+        if (followCount) {
+           // console.log('followCount :', followCount)
+            return res.status(200).json({
+                success: true,
+                follow: followCount || 0
+            })
+        } else {
+            return res.status(200).json({
+                success: true,
+                message: "userId not found"
+            })
+        }
+    } catch (error) {
+        return res.status(403).json({
+            status: 403,
+            message: 'malformed request'
+        });
+    }
+};
 
 const getFollowing = async (req: Request, res: Response, next: NextFunction) => {
-    console.log('CTRL')
-    return res.status(200).json({
-        success: true,
-        data: 100
-    })
-}
+    try {
+        const FollowingCount = await FollowingModel.find({userId: req.body.userId}).count()
+        if (FollowingCount) {
+            return res.status(200).json({
+                success: true,
+                follow: FollowingCount || 0
+            })
+        } else {
+            return res.status(200).json({
+                success: true,
+                message: "userId not found"
+            })
+        }
+    } catch (error) {
+        return res.status(403).json({
+            status: 403,
+            message: 'malformed request'
+        });
+    }
+};
 
 
 export default {
@@ -921,6 +1012,8 @@ export default {
     updateNotificationStatus,
     transactionHistoryByUser,
     getRewardPointByUser,
-    getFollower,
+    follow,
+    following,
+    followersCount,
     getFollowing
 }
