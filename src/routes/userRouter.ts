@@ -68,17 +68,19 @@ router.post('/getTransactionHistoryByUser', isLoggedIn, userController.transacti
 router.post('/rewardPointsByUser', isLoggedIn, userController.getRewardPointByUser);
 
 /* analticsy router */
-router.post('/follow', userController.follow);
-router.post('/following', userController.following);
-router.get('/followersCount', userController.followersCount);
-router.get('/followingCount', userController.getFollowing);
+router.post('/follow', isLoggedIn, userController.follow);
+router.post('/following', isLoggedIn, userController.following);
+router.get('/followersCount', isLoggedIn, userController.followersCount);
+router.get('/followingCount', isLoggedIn, userController.getFollowing);
 
+router.get('/postValidatedCount', userController.postValidatedCount);
+router.get('/ideaPosted', userController.ideaPostedCount);
 
 /*------------------------- start uploadProfilePicture functionaliy --------------------------*/
 
 router.post('/uploadProfilePicture', upload.single('image'), async (req: Request, res: Response, next: NextFunction) => {
     if (req.body.userId == undefined || req.body.userId == null || req.body.userId == "") {
-        res.status(422).json({ success: false, error_msg: "userId cannot be blank" });
+        res.status(422).json({ success: false, message: "userId cannot be blank" });
         return;
     }
     let userDetails = await userModel.findOne({ "_id": req.body.userId });
@@ -102,8 +104,6 @@ router.post('/uploadProfilePicture', upload.single('image'), async (req: Request
     }
 })
 /*------------------------- end uploadProfilePicture functionaliy --------------------------*/
-
-
 
 
 

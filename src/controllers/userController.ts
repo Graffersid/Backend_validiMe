@@ -938,6 +938,10 @@ const following =async (req: Request, res: Response, next: NextFunction) => {
 }
 
 const followersCount = async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.body
+    if (userId == undefined || userId == null || userId == "") {
+        return res.status(422).json({ success: false, message: "userId cannot be blank" });
+    }
     try {
         const followCount = await FollowersModel.find({userId: req.body.userId}).count()
         if (followCount) {
@@ -947,20 +951,25 @@ const followersCount = async (req: Request, res: Response, next: NextFunction) =
                 follow: followCount || 0
             })
         } else {
-            return res.status(200).json({
-                success: true,
+            return res.status(404).json({
+                success: false,
                 message: "userId not found"
             })
         }
     } catch (error) {
         return res.status(403).json({
             status: 403,
-            message: 'malformed request'
+            message: 'malformed request',
+            error: error
         });
     }
 };
 
 const getFollowing = async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.body
+    if (userId == undefined || userId == null || userId == "") {
+        return res.status(422).json({ success: false, message: "userId cannot be blank" });
+    }
     try {
         const FollowingCount = await FollowingModel.find({userId: req.body.userId}).count()
         if (FollowingCount) {
@@ -969,18 +978,79 @@ const getFollowing = async (req: Request, res: Response, next: NextFunction) => 
                 follow: FollowingCount || 0
             })
         } else {
-            return res.status(200).json({
-                success: true,
+            return res.status(404).json({
+                success: false,
                 message: "userId not found"
             })
         }
     } catch (error) {
         return res.status(403).json({
             status: 403,
-            message: 'malformed request'
+            message: 'malformed request',
+            error: error
         });
     }
 };
+
+const postValidatedCount = async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.body
+    if (userId == undefined || userId == null || userId == "") {
+        return res.status(422).json({ success: false, message: "userId cannot be blank" });
+    }
+
+    try {
+        const user = await userSchema.findOne({_id: userId})
+        if(user) {
+            const validatedCount = await validateIdeaModel.find({userId: userId}).count();
+            return res.status(200).json({
+                success: true,
+                post_validated: validatedCount || 0
+            }) 
+        } else {
+            return res.status(404).json({
+                success: false,
+                message: "userId not found"
+            })
+        }
+    } catch (error) {
+        return res.status(403).json({
+            status: 403,
+            message: 'malformed request',
+            error: error
+        });
+    }
+};
+
+const ideaPostedCount = async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.body
+    if (userId == undefined || userId == null || userId == "") {
+        return res.status(422).json({ success: false, message: "userId cannot be blank" });
+    }
+    try {
+        const user = await userSchema.findOne({_id: userId})
+        if (user) {
+            const ideaCount = await ideaModel.find({userId: userId}).count();
+            console.log('ideaCount :', ideaCount);
+            return res.status(200).json({
+                success: true,
+                ideaPosted: ideaCount || 0
+            }) 
+        } else {
+            return res.status(404).json({
+                success: false,
+                message: "userId not found"
+            })   
+        }
+    } catch (error) {
+        return res.status(403).json({
+            status: 403,
+            message: 'malformed request',
+            error: error
+        });
+    }
+}
+
+
 
 
 export default {
@@ -1015,5 +1085,7 @@ export default {
     follow,
     following,
     followersCount,
-    getFollowing
+    getFollowing,
+    ideaPostedCount,
+    postValidatedCount
 }
