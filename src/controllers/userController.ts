@@ -24,12 +24,12 @@ import User from "../models/User";
 const signupUser = async (req: Request, res: Response, next: NextFunction) => {
     const { fullName, email, contactNumber, password, confirmPassword } = req.body
 
-    if (!fullName || !email || !contactNumber || !password || !confirmPassword || fullName == "" || email == "" || contactNumber == "" || password == "" || confirmPassword == "") {
-        return res.status(422).json({
-            success: false,
-            message: "Please add all fields"
-        });
-    }
+    // if (!fullName || !email || !contactNumber || !password || !confirmPassword || fullName == "" || email == "" || contactNumber == "" || password == "" || confirmPassword == "") {
+    //     return res.status(422).json({
+    //         success: false,
+    //         message: "Please add all fields"
+    //     });
+    // }
 
     let existingContactNumber = await userSchema.findOne({ "contactNumber": contactNumber });
     if (existingContactNumber) {
@@ -90,8 +90,11 @@ const loginUser = async (req: Request, res: Response, next: NextFunction) => {
     if (!email || !password || email == "" || password == "") {
         return res.status(422).json({ success: false, message: "Please add all fields" });
     }
-    const user = await userSchema.findOne({ email })
-    if (user && (await bcrypt.compare(password, user.password))) {
+    const user = await userSchema.findOne({email})
+    console.log('user :', user);
+    console.log('password :', user?.password);
+    if (user && (await bcrypt.compare(req.body.password, user.password))) {
+        console.log('-- inside if --')
 
         let payload = {
             "userId": user._id,

@@ -12,13 +12,10 @@ import User from "./models/User";
 import * as bcrypt from 'bcrypt'
 import cors from "cors"
 var path = require('path');
-import { error } from "console";
 
 const router = express();
 
 
-import authorRoutes from './routes/Author' ;
-import bookRoutes from './routes/Book';
 import userRoutes from './routes/userRouter';
 
 
@@ -147,11 +144,9 @@ router.use((req, res, next) => {
     next();
 })
 
-    /* Routes */
-
-router.use('/books', bookRoutes);
+/* Routes */
 router.use('/api/v1', userRoutes);
-router.use('/authors', authorRoutes);
+
 
 /* signup functionaliy  */
 /*

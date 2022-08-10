@@ -41,8 +41,8 @@ const UserSchema: Schema = new Schema(
         },
         password: {
             type: String,
-            required: true,
-            select: false 
+            required: true
+            //select: false 
         },
         images: {
             type:Object
