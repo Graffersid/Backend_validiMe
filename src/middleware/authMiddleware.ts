@@ -33,7 +33,7 @@ const isLoggedIn = asyncHandler(async (req: Request , res: Response, next: NextF
             await userModel.findById({_id: decoded.id}).select('-password')
             next()
         } catch (error) {
-            console.log('error :', error)
+            // console.log('error :', error)
             return res.status(401).json({
                 success: false,
                 message: "Not authorized"
